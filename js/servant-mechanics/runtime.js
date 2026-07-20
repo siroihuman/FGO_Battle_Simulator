@@ -10,6 +10,14 @@
     if (typeof module !== 'undefined' && module.exports) module.exports = M;
     return;
   }
+
+  // engine.js側に正式なフック実装がある場合は、二重実行を避けるためラップしない。
+  if (typeof proto._runEffectHooks === 'function' && typeof proto._runServantHook === 'function') {
+    proto.__servantMechanicsRuntimeInstalled = true;
+    if (typeof module !== 'undefined' && module.exports) module.exports = M;
+    return;
+  }
+
   proto.__servantMechanicsRuntimeInstalled = true;
 
   proto._runServantHook = function (actor, eventName, context) {
@@ -28,6 +36,7 @@
     const target = this._currentEnemyTarget();
     if (!actor || !card || !target) return originalExecuteCard.call(this, action, chainContext);
 
+    // 旧engine.js内の直書き処理だけを一時的に無効化し、個別モジュール側で1回だけ発動する。
     const isolatedTypes = new Set(['busterNormalNp', 'onAttackAddTrait']);
     const isolatedStatuses = actor.statuses.filter((status) => isolatedTypes.has(status.type));
     if (isolatedStatuses.length) actor.statuses = actor.statuses.filter((status) => !isolatedTypes.has(status.type));
