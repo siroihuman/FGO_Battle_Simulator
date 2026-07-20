@@ -18,6 +18,11 @@ methods = """    _hasTrait(unit, trait) { return hasTrait(unit, trait); }\n\n   
 if '_runEffectHooks(eventName' not in engine:
     engine = engine.replace(method_anchor, methods + method_anchor, 1)
 
+# トリガー状態の発動率をstatusへ保持する。
+status_icon = "        statusIcon: effect.statusIcon || null"
+if "chance: effect.chance" not in engine:
+    engine = engine.replace(status_icon, "        chance: effect.chance == null ? null : Number(effect.chance),\n" + status_icon, 1)
+
 # 宝具前後・攻撃時フック
 np_log = "      this._log(`${actor.name} 宝具「${np.name}」 OC${oc}。NPを0%にリセット。`, 'np');"
 if "_runServantHook(actor, 'beforeNp'" not in engine:
