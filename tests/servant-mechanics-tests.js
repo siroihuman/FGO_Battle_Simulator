@@ -3,6 +3,7 @@
 const DATA = require('../js/data.js');
 const MECHANICS = require('../js/servant-mechanics/index.js');
 const { BattleEngine } = require('../js/engine.js');
+require('../js/servant-mechanics/runtime.js');
 
 function assert(condition, label) {
   if (!condition) throw new Error(`FAIL: ${label}`);
@@ -27,12 +28,13 @@ const fenrir = engine.state.allies[0];
 const alice = engine.state.allies[1];
 const enemy = engine.state.enemies[0];
 
+assert(typeof engine._runEffectHooks === 'function', 'ランタイム拡張をengine.js外部から導入');
+
 fenrir.statuses.push({ type: 'busterNormalNp', value: 10, remaining: 3 });
 engine._runEffectHooks('afterNormalAttack', {
   actor: fenrir,
   target: enemy,
-  action: { type: 'card', card: 'buster' },
-  result: { damage: 1, np: 0, stars: 0 }
+  action: { type: 'card', card: 'buster' }
 });
 assert(fenrir.np === 10, '付与先が別サーヴァントでもBuster通常攻撃時NP増加が発動');
 
@@ -41,10 +43,9 @@ engine.rng = () => 0;
 engine._runEffectHooks('afterAttack', {
   actor: alice,
   target: enemy,
-  action: { type: 'card', card: 'arts' },
-  result: { damage: 1, np: 0, stars: 0 }
+  action: { type: 'card', card: 'arts' }
 });
-assert(engine._hasTrait(enemy, '虚構概念'), 'アリスの攻撃時特性付与が個別ファイルから発動');
+assert(enemy.traits.includes('虚構概念'), 'アリスの攻撃時特性付与が個別ファイルから発動');
 
 assert(Object.keys(DATA.servants).every((id) => Boolean(MECHANICS.get(id))), '登録済み全サーヴァントに分類ファイルが存在');
 console.log('All servant mechanics tests passed.');
