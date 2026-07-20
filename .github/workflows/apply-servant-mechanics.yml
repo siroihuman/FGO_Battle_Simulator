@@ -1,6 +1,7 @@
 name: Apply servant mechanics architecture
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'tools/apply_servant_mechanics_patch.py'
