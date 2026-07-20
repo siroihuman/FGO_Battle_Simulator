@@ -12,8 +12,8 @@
       name: '装備なし',
       atk: 0,
       hp: 0,
-      effects: [],
-      description: '概念礼装を装備しません。'
+      description: '概念礼装を装備しません。',
+      effects: []
     },
 
     templateExample: {
@@ -21,10 +21,10 @@
       name: 'テンプレート礼装（例）',
       atk: 500,
       hp: 500,
+      description: '開始時NPを20%増やすテンプレート例。',
       effects: [
         { type: 'npCharge', value: 20 }
-      ],
-      description: '開始時NPを20%増やすテンプレート例。'
+      ]
     },
 
     blackGrail: {
@@ -32,12 +32,12 @@
       name: '黒の聖杯',
       atk: 2400,
       hp: 0,
+      description: `自身の宝具威力を80%アップ
+＆毎ターンHPを500減らす【デメリット】`,
       effects: [
         { type: 'npPowerUp', value: 80 },
         { type: 'hpLossPerTurn', value: 500 }
       ],
-      description: `自身の宝具威力を80%アップ
-＆毎ターンHPを500減らす【デメリット】`,
       source: 'https://appmedia.jp/fategrandorder/103128'
     },
 
@@ -46,8 +46,8 @@
       name: '名探偵フォウムズ',
       atk: 2000,
       hp: 0,
-      effects: [],
       description: '効果なし。',
+      effects: [],
       source: 'https://gamewith.jp/fgo/article/show/161275'
     }
   };
