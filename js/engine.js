@@ -789,20 +789,28 @@
       const np = actor.data.np;
       const oc = this._calculateOc(actor, precedingNps);
       this._currentNpOc = oc;
-      actor.np = Math.max(0, actor.np - 100);
-      this._log(`${actor.name} 宝具「${np.name}」 OC${oc}。`, 'np');
+      // 宝具発動時は現在のゲージ量にかかわらず必ず0%へ戻す。
+      // 宝具攻撃によるリチャージと宝具後効果は、この0%を起点に加算する。
+      actor.np = 0;
+      this._log(`${actor.name} 宝具「${np.name}」 OC${oc}。NPを0%にリセット。`, 'np');
       (np.before || []).forEach((raw) => { const effect={...raw}; if(Array.isArray(effect.npLevelValues)) effect.value=effect.npLevelValues[actor.npLevel-1]; this._applyEffect(effect, actor, actor.id, { oc, level: 10 }); });
 
       const targets = np.target === 'support' ? [] : (np.target === 'allEnemies' ? this.getAliveEnemies().slice() : [this._currentEnemyTarget()].filter(Boolean));
       let totalDamage = 0;
       let totalStars = 0;
+      let totalNpGain = 0;
       targets.forEach((target) => {
         const result = this._resolveAttackOnTarget(actor, target, { ...action, type: 'np', card: np.card, position: 0, critical: false }, chainContext);
         totalDamage += result.damage;
         totalStars += result.stars;
-        this._addNp(actor, result.np, false);
+        totalNpGain += result.np;
         this._log(`${target.name}に${result.damage.toLocaleString('ja-JP')}ダメージ。`, 'damage');
       });
+      totalNpGain = floor2(totalNpGain);
+      if (totalNpGain > 0) {
+        this._addNp(actor, totalNpGain, false);
+        this._log(`${actor.name}の宝具攻撃によるNPリチャージ：+${totalNpGain.toFixed(2)}%。`, 'np');
+      }
       this.state.nextStars += totalStars;
       (np.after || []).forEach((raw) => { const effect={...raw}; if(Array.isArray(effect.npLevelValues)) effect.value=effect.npLevelValues[actor.npLevel-1]; this._applyEffect(effect, actor, this.state.selectedEnemyId, { oc, level: 10 }); });
       if (totalStars) this._log(`宝具でスターを${totalStars}個獲得（次ターン）。`);
@@ -940,6 +948,21 @@
       if (chainContext.quickChain) this._log('Quick CHAIN成立。', 'chain');
       if (chainContext.mighty) this._log('Mighty CHAIN：3種の1stボーナスが有効。', 'chain');
 
+      // Q/A/Bチェインの成立効果は、3枚の攻撃を始める前に適用する。
+      // ArtsチェインのNP+20%は宝具発動前に加算され、宝具使用時に0%へリセットされる。
+      if (chainContext.artsChain) {
+        const participants = [...new Set(selected.map((action) => action.actorId))];
+        participants.forEach((id) => {
+          const ally = this.getUnit(id);
+          if (ally && ally.alive) this._addNp(ally, 20, true);
+        });
+        this._log('Arts CHAIN効果：攻撃前に参加者のNPが20%増加。', 'chain');
+      }
+      if (chainContext.quickChain) {
+        this.state.nextStars += 20;
+        this._log('Quick CHAIN効果：攻撃前にスター20個獲得（次ターン）。', 'chain');
+      }
+
       let precedingNps = 0;
       selected.forEach((action) => {
         if (!this.getAliveEnemies().length) return;
@@ -950,19 +973,6 @@
           this._executeCard(action, chainContext);
         }
       });
-
-      if (chainContext.artsChain) {
-        const participants = [...new Set(selected.map((action) => action.actorId))];
-        participants.forEach((id) => {
-          const ally = this.getUnit(id);
-          if (ally && ally.alive) this._addNp(ally, 20, true);
-        });
-        this._log('Arts CHAIN効果：参加者のNPが20%増加。', 'chain');
-      }
-      if (chainContext.quickChain) {
-        this.state.nextStars += 20;
-        this._log('Quick CHAIN効果：スター20個獲得（次ターン）。', 'chain');
-      }
 
       const sameActor = selected.every((action) => action.actorId === selected[0].actorId);
       if (sameActor && this.getAliveEnemies().length) this._executeExtra(selected[0].actorId, chainContext, selected);
