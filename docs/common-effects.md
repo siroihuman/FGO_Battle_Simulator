@@ -1,6 +1,6 @@
 # 共通状態・トリガー効果
 
-このファイルに記載した効果は`js/common-effects.js`、`js/common-effects-extra-attack.js`、`js/card-buff-effects.js`および`js/turn-field-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
+このファイルに記載した効果は`js/common-effects.js`、`js/common-effects-extra-attack.js`、`js/card-buff-effects.js`、`js/defense-resistance-effects.js`および`js/turn-field-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
 
 ## 通常攻撃時に確率で弱体付与
 
@@ -126,7 +126,7 @@
 
 同一ターン中の複数攻撃をすべて回避し、ターン終了時に解除されます。
 
-複数の回避・無敵がある場合の消費優先順位は次のとおりです。
+同種の回避・無敵が複数ある場合の消費優先順位は次のとおりです。
 
 1. 残りターンが短い状態
 2. 同じ残りターンなら回数無制限状態
@@ -134,6 +134,60 @@
 4. 先に付与された状態
 
 必中は回避だけを無視します。無敵貫通は回避と無敵の両方を無視します。無視された防御状態は消費されません。
+
+## 対粛正防御
+
+```js
+{
+  type: 'antiEnforcementDefense',
+  target: 'allAllies',
+  ocUses: [1, 2, 3, 4, 5],
+  duration: 3
+}
+```
+
+- `ocUses`はOC1～5に対応する残り回数です。効果量の`value`ではなく、状態の`uses`へ保存されます。
+- `ocUses`の解決処理は汎用処理です。対粛正防御以外の回数制状態でも同じ記述を使用できます。
+- 攻撃によるダメージを0にし、必中と無敵貫通の両方を無視します。
+- 防御状態の種類ごとの優先順位は`対粛正防御 > 無敵 > 回避`です。
+- 対粛正防御で防いだ場合、同時に付与されている無敵・回避は消費しません。
+- 1回の攻撃アクションにつき1回だけ消費します。多段HitでもHit数分は消費しません。
+- 全体攻撃では、攻撃対象となった各味方が自身の対粛正防御を1回ずつ消費します。
+- 同じ対象に有効な対粛正防御が残っている場合、再付与による上書き・回数加算・ターン延長は行いません。
+- `uses`が0になった時点で即座に解除します。残り回数があっても`duration`が0になった場合はターン終了時に解除します。
+
+宝具の効果配列は記述順に処理されます。次の例では、攻撃力アップ、弱体解除、対粛正防御の順序を維持します。
+
+```js
+before: [
+  { type: 'attackUp', target: 'allAllies', npLevelValues: [30, 40, 45, 47.5, 50], duration: 3 },
+  { type: 'debuffClear', target: 'allAllies' },
+  { type: 'antiEnforcementDefense', target: 'allAllies', ocUses: [1, 2, 3, 4, 5], duration: 3 }
+]
+```
+
+## 被クリティカル発生耐性
+
+```js
+{
+  type: 'critRateResist',
+  target: 'self',
+  value: 20
+}
+```
+
+敵の通常攻撃における最終クリティカル発生率は次の順序で計算します。
+
+```text
+敵の基礎クリティカル発生率
+- 敵に付与されたcritRateDown
+- 攻撃対象に付与されたcritRateResist
+```
+
+- 最終確率は0～100%に制限します。
+- 同じ対象に複数の`critRateResist`がある場合は加算します。
+- `critRateDown`は敵側へ付与する弱体、`critRateResist`は攻撃を受ける対象側が持つ耐性として別々に管理します。
+- 宝具にはクリティカル判定を行わないため、`critRateResist`も宝具ダメージには影響しません。
 
 ## 毎ターンスター獲得
 
@@ -244,4 +298,4 @@ Extra Attack全Hit解決後
 
 `starsPerTurn`は`turnEnd`で状態の残りターンを減らす前に処理されます。
 
-弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の消費は`_consumeDefenseStatus`、フィールド条件は`_conditionMet`で共通化されています。
+弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の選択・消費は`_selectDefenseStatus`と`_consumeDefenseStatus`、フィールド条件は`_conditionMet`、敵クリティカル率は`_enemyCriticalChance`で共通化されています。
