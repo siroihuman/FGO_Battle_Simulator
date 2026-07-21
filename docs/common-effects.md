@@ -1,6 +1,6 @@
 # 共通状態・トリガー効果
 
-このファイルに記載した効果は`js/common-effects.js`および`js/common-effects-extra-attack.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
+このファイルに記載した効果は`js/common-effects.js`、`js/common-effects-extra-attack.js`、`js/card-buff-effects.js`および`js/turn-field-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
 
 ## 通常攻撃時に確率で弱体付与
 
@@ -135,6 +135,92 @@
 
 必中は回避だけを無視します。無敵貫通は回避と無敵の両方を無視します。無視された防御状態は消費されません。
 
+## 毎ターンスター獲得
+
+```js
+{
+  type: 'starsPerTurn',
+  target: 'self',
+  values: [5, 6, 7, 8, 9, 10, 11, 12, 13, 15],
+  duration: 3
+}
+```
+
+- 前衛かつ生存中の付与対象が持つ`starsPerTurn`を、ターン終了時に合算します。
+- 獲得分は`nextStars`へ入り、次ターン開始時のスターとして使用されます。
+- 複数状態および複数の前衛からの獲得量は加算します。
+- 次ターンのスターは最大50個です。
+- 控え、戦闘不能、退場状態の対象からは獲得しません。
+- 状態を付与したターンの終了時を1回目として数えます。`duration: 3`なら、付与ターンを含む3回のターン終了時に発動し、4回目は発動しません。
+
+## フィールド特性
+
+戦闘全体のフィールド特性は、戦闘設定の`fieldTraits`へ配列で記述します。
+
+```js
+{
+  fieldTraits: ['水辺', '炎上']
+}
+```
+
+Waveごとに変更する場合は、各Wave設定へ`fieldTraits`を記述します。Wave側に配列がある場合は、戦闘全体の設定より優先されます。
+
+```js
+{
+  waves: [
+    {
+      fieldTraits: ['水辺'],
+      enemies: [/* ... */]
+    },
+    {
+      fieldTraits: ['森'],
+      enemies: [/* ... */]
+    }
+  ]
+}
+```
+
+現在のフィールド特性は戦闘状態の`state.fieldTraits`に保持されます。共通APIとして次を使用できます。
+
+```text
+getFieldTraits()
+hasFieldTrait(key)
+setFieldTraits(traits)
+```
+
+## フィールド条件付き効果
+
+```js
+{
+  type: 'npPowerUp',
+  target: 'self',
+  ocValues: [10, 15, 20, 25, 30],
+  duration: 1,
+  condition: {
+    kind: 'fieldTrait',
+    key: '水辺'
+  }
+}
+```
+
+- `condition.kind`が`fieldTrait`の場合、現在の`fieldTraits`に`condition.key`が存在するときだけ効果を適用します。
+- 条件不成立時は状態を付与せず、「付与成功」のログも出しません。条件不成立ログだけを記録します。
+- 宝具の`before`へ置いた場合は、条件判定と状態付与を宝具ダメージ計算前に行うため、その宝具自身へ反映されます。
+- `水辺`以外にも`森`、`炎上`、`都市`など任意のフィールド特性を同じ形式で使用できます。
+- `_conditionMet`を共通判定関数として使用するため、スキル、宝具、クエスト効果から再利用できます。
+
+複数条件を組み合わせる場合は、`all`、`any`、`not`も使用できます。
+
+```js
+condition: {
+  kind: 'all',
+  conditions: [
+    { kind: 'fieldTrait', key: '水辺' },
+    { kind: 'not', condition: { kind: 'fieldTrait', key: '炎上' } }
+  ]
+}
+```
+
 ## 共通イベントフック
 
 `BattleEngine`で次のフックを利用できます。
@@ -156,4 +242,6 @@ Extra Attack全Hit解決後
 
 宝具解決後には呼び出されません。Extra AttackではHitごとではなく、Extra Attack全体につき1回だけ呼び出されます。
 
-弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の消費は`_consumeDefenseStatus`で共通化されています。
+`starsPerTurn`は`turnEnd`で状態の残りターンを減らす前に処理されます。
+
+弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の消費は`_consumeDefenseStatus`、フィールド条件は`_conditionMet`で共通化されています。
