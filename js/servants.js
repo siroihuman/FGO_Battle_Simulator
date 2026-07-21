@@ -9,6 +9,114 @@
   const levelValues = (values) => values;
 
   const SERVANTS = {
+      yaoyaOshichi: {
+        id: 'yaoyaOshichi',
+        no: '001',
+        name: '八百屋お七',
+        classId: 'assassin',
+        rarity: 3,
+        maxLevel: 70,
+        maxHp: 8464,
+        atk: 7161,
+        levelStats: {
+          max: { hp: 8464, atk: 7161 },
+          100: { hp: 11476, atk: 9692 },
+          120: { hp: 13489, atk: 11383 }
+        },
+        attribute: 'man',
+        traits: ['サーヴァント', '人型', '女性', '混沌', '善', '人の力', 'ヒト科', '対人', '炎', '子供のサーヴァント'],
+        cards: ['quick', 'quick', 'quick', 'arts', 'buster'],
+        hits: { quick: 4, arts: 3, buster: 3, extra: 6, np: 7 },
+        na: 0.71,
+        nd: 4.00,
+        starRate: 25.1,
+        starWeight: 97,
+        deathRate: 42.6,
+        skillIcons: [
+          'skill-quick-up.png',
+          'skill-attack-up.png',
+          'skill-evade.png'
+        ],
+        skills: [
+          {
+            id: 'departedSoulFirebird',
+            name: '亡魂の化鶏 C+',
+            baseCt: 8,
+            target: 'self',
+            description: `自身のQuickカード性能をアップ[Lv](3T)
+＋味方全体の攻撃力をアップ[Lv](3T)
+＆防御力をアップ[Lv](3T)
+＆回避状態を付与(1回・3T)`,
+            effects: [
+              { type: 'cardUp', target: 'self', card: 'quick', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'attackUp', target: 'allAllies', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'defenseUp', target: 'allAllies', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'evade', target: 'allAllies', uses: 1, duration: 3 }
+            ]
+          },
+          {
+            id: 'loveSupport',
+            name: '恋愛応援 B',
+            baseCt: 7,
+            target: 'ally',
+            description: `味方単体の攻撃力をアップ[Lv](3T)
+＆「通常攻撃時確率で魅了状態(1T)を付与する状態」を付与(3T)
+＆魅了付与成功率をアップ[Lv](3T)`,
+            effects: [
+              { type: 'attackUp', target: 'selectedAlly', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              {
+                type: 'onNormalAttackApplyDebuff',
+                target: 'selectedAlly',
+                debuffType: 'charm',
+                chance: 50,
+                debuffDuration: 1,
+                duration: 3,
+                normalCardsOnly: true
+              },
+              { type: 'charmSuccessUp', target: 'selectedAlly', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 }
+            ]
+          },
+          {
+            id: 'identityConcealment',
+            name: '正体隠蔽 C',
+            baseCt: 7,
+            target: 'self',
+            description: `自身に回避状態を付与(1T)
+＆Quickカード性能をアップ[Lv](3T)
+＆スター発生率をアップ[Lv](3T)`,
+            effects: [
+              { type: 'evade', target: 'self', duration: 1 },
+              { type: 'cardUp', target: 'self', card: 'quick', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'starRateUp', target: 'self', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 }
+            ]
+          }
+        ],
+        passives: [
+          { name: '気配遮断 C+', icon: 'class-presence-concealment.png', effects: [{ type: 'starRateUp', value: 6.5 }] }
+        ],
+        np: {
+          id: 'hirenNoEnjomaku',
+          name: '悲恋の炎上幕',
+          reading: 'ひれんのえんじょうまく',
+          card: 'quick',
+          target: 'allEnemies',
+          hits: 7,
+          multipliers: [800, 1000, 1100, 1150, 1200],
+          description: `敵全体に強力な〔愛する者〕特攻攻撃[Lv]<OC:特攻威力UP>
+＆やけど状態を付与(5T)<OC:効果UP>
+＆延焼状態を付与(5T)
+＆クリティカル発生率をダウン(5T)`,
+          before: [],
+          special: { kind: 'trait', key: '愛する者', ocMultipliers: [1.5, 1.625, 1.75, 1.875, 2] },
+          after: [
+            { type: 'burn', target: 'allEnemies', ocValues: [1000, 1250, 1500, 1750, 2000], duration: 5, debuff: true },
+            { type: 'dotAmplify', target: 'allEnemies', dotType: 'burn', value: 100, duration: 5, debuff: true },
+            { type: 'critRateDown', target: 'allEnemies', value: 20, duration: 5, debuff: true }
+          ]
+        },
+        source: 'https://w.atwiki.jp/siroi_human/pages/261.html'
+      },
+
       koyanskayaLight: {
         id: 'koyanskayaLight',
         no: '314',
