@@ -59,6 +59,14 @@
       String(icon.getAttribute('title') || '').includes('｜クラススコア：')
     );
     const classSkillIcons = passiveIcons.filter((icon) => !classScoreIcons.includes(icon));
+    classSkillIcons.forEach((icon) => {
+      const image = icon.querySelector('img');
+      if (!image) return;
+      const filename = String(image.getAttribute('src') || '').split('/').pop();
+      if (filename && filename.toLowerCase().endsWith('.png')) {
+        image.setAttribute('src', `assets/skill-icons/${filename}`);
+      }
+    });
 
     passiveIcons.forEach((icon) => icon.remove());
     if (!statusContainer.querySelector('.buff-icon')) statusContainer.remove();
