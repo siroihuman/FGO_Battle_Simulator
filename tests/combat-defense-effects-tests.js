@@ -30,7 +30,7 @@ function makeEngine(options = {}) {
   return new BattleEngine({
     seed: 314058,
     party: options.party || [
-      { servantId: 'fenrir', skillLevel: 10, npLevel: 1, startingNp: 100 }
+      { servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1, startingNp: 100 }
     ],
     enemies: [baseEnemy(options.enemy)]
   });
@@ -354,7 +354,7 @@ test('状態表示名・アイコン・残り回数を取得できる', () => {
   assert.strictEqual(enemySummary.find((entry) => entry.type === 'defenseDown').name, '防御力ダウン');
   assert.strictEqual(allySummary.find((entry) => entry.type === 'instantDeathImmune').name, '即死無効');
   assert.strictEqual(allySummary.find((entry) => entry.type === 'damageCut').name, 'ダメージカット');
-  assert.strictEqual(allySummary.find((entry) => entry.type === 'critUp').uses, 3);
+  assert.strictEqual(allySummary.find((entry) => entry.type === 'critUp' && entry.uses != null).uses, 3);
   assert.strictEqual(DATA.statusIcons.defenseDown, 'Defensedown.webp');
 });
 
