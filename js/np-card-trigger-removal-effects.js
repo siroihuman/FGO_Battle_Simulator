@@ -90,6 +90,12 @@
     return conversion ? String(conversion.card) : this.getBaseNpCard(unit);
   };
 
+  proto._resolveEffectiveNpAction = function (actor, action) {
+    if (!actor || !action || action.type !== 'np') return action;
+    const card = this.getEffectiveNpCard(actor);
+    return action.card === card ? action : { ...action, card };
+  };
+
   proto.refreshSelectedNpCards = function () {
     (this.state.selectedActions || []).forEach((action) => {
       if (action && action.type === 'np') action.card = this.getEffectiveNpCard(action.actorId);
@@ -182,13 +188,46 @@
     return originalApplyEffect.call(this, resolvedEffect, source, selectedTargetId, resolvedContext);
   };
 
+  const originalCalculateAttackTotal = proto._calculateAttackTotal;
+  proto._calculateAttackTotal = function (actor, target, action, chainContext) {
+    return originalCalculateAttackTotal.call(
+      this,
+      actor,
+      target,
+      this._resolveEffectiveNpAction(actor, action),
+      chainContext
+    );
+  };
+
+  const originalCardNpPerHit = proto._cardNpPerHit;
+  proto._cardNpPerHit = function (actor, target, action, chainContext, overkill) {
+    return originalCardNpPerHit.call(
+      this,
+      actor,
+      target,
+      this._resolveEffectiveNpAction(actor, action),
+      chainContext,
+      overkill
+    );
+  };
+
+  const originalStarRatePerHit = proto._starRatePerHit;
+  proto._starRatePerHit = function (actor, target, action, chainContext, overkill) {
+    return originalStarRatePerHit.call(
+      this,
+      actor,
+      target,
+      this._resolveEffectiveNpAction(actor, action),
+      chainContext,
+      overkill
+    );
+  };
+
   const originalExecuteNp = proto._executeNp;
   proto._executeNp = function (action, chainContext, precedingNps) {
     const actor = this.getUnit(action && action.actorId);
     const executable = Boolean(actor && actor.alive && Number(actor.np || 0) >= 100);
-    const effectiveAction = executable
-      ? { ...action, card: this.getEffectiveNpCard(actor) }
-      : action;
+    const effectiveAction = executable ? this._resolveEffectiveNpAction(actor, action) : action;
     const result = originalExecuteNp.call(this, effectiveAction, chainContext, precedingNps);
     if (executable) {
       this._runGenericEvent('afterNp', {
