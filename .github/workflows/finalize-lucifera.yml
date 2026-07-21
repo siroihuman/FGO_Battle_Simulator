@@ -19,7 +19,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Insert Lucifera data
+      - name: Insert Lucifera data and update shared regression
         shell: bash
         run: |
           python - <<'PY'
@@ -30,6 +30,14 @@ jobs:
           block = workflow.split(start, 1)[1].split(end, 1)[0]
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
           exec(compile(code, 'embedded-lucifera-implementation.py', 'exec'))
+
+          test_path = Path('tests/np-card-trigger-removal-effects-tests.js')
+          test_text = test_path.read_text(encoding='utf-8')
+          old = "assert.strictEqual(actor.statuses.find((status) => status.type === 'critUp').value, 4);"
+          new = "assert.strictEqual(actor.statuses.find((status) => status.type === 'critUp' && !status.passive).value, 4);"
+          if old not in test_text:
+              raise SystemExit('afterNp crit regression assertion not found')
+          test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
           PY
 
       - name: Check all JavaScript syntax
@@ -78,7 +86,7 @@ jobs:
           git rm .github/workflows/diagnose-lucifera.yml
           git rm .github/workflows/finalize-lucifera.yml
           git rm .lucifera-workflow-trigger
-          git add js/servants.js tests/lucifera-tests.js tests/engine-tests.js
+          git add js/servants.js tests/lucifera-tests.js tests/engine-tests.js tests/np-card-trigger-removal-effects-tests.js
           git commit -m 'Implement Lucifera servant data'
           git push origin HEAD:${{ github.head_ref }}
 
