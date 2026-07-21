@@ -30,19 +30,19 @@
     {
       id: 'busterCardUp',
       name: 'Busterカード性能アップ',
-      icon: 'Statusup.webp',
+      icon: 'Busterupstatus.webp',
       effect: { type: 'cardUp', card: 'buster', value: 20 }
     },
     {
       id: 'artsCardUp',
       name: 'Artsカード性能アップ',
-      icon: 'Statusup.webp',
+      icon: 'Artsupstatus.webp',
       effect: { type: 'cardUp', card: 'arts', value: 20 }
     },
     {
       id: 'quickCardUp',
       name: 'Quickカード性能アップ',
-      icon: 'Statusup.webp',
+      icon: 'Quickupstatus.webp',
       effect: { type: 'cardUp', card: 'quick', value: 20 }
     },
     {
@@ -66,7 +66,7 @@
     {
       id: 'extraAttackUp',
       name: 'Extra Attackカード性能アップ',
-      icon: 'Statusup.webp',
+      icon: 'Extraattackup.webp',
       effect: { type: 'cardUp', card: 'extra', value: 50 }
     },
     {
