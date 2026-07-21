@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.8.0',
+    version: '1.8.1',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
