@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.3.0',
+    version: '1.4.0',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
@@ -49,17 +49,18 @@
     },
     servants: {},
     craftEssences: {},
-    mysticCodes: {}
-
+    mysticCodes: {},
+    classScore: null
   };
 
   global.FGO_SIM_DATA = DATA;
 
-  // Node.jsではdata.jsをrequireするだけで、分割データも自動登録します。
+  // Node.jsではdata.jsをrequireするだけで、分割データと常時適用システムも自動登録します。
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = DATA;
     require('./servants.js');
     require('./craft-essences.js');
     require('./mystic-codes.js');
+    require('./class-score.js');
   }
 })(typeof window !== 'undefined' ? window : globalThis);
