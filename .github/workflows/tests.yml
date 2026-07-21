@@ -35,17 +35,14 @@ jobs:
         shell: bash
         run: |
           set +e
-          {
-            status=0
-            for file in tests/*-tests.js; do
-              echo "=== $file ==="
-              node "$file" || status=1
-            done
-            exit "$status"
-          } > alice-integration-tests.log 2>&1
-          status=$?
+          status=0
+          for file in tests/*-tests.js; do
+            echo "=== $file ===" >> alice-integration-tests.log
+            node "$file" >> alice-integration-tests.log 2>&1 || status=1
+          done
           cat alice-integration-tests.log
           echo "$status" > /tmp/alice-integration-status
+          exit 0
       - name: Record integration failure
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
