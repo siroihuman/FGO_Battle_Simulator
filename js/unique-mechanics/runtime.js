@@ -87,10 +87,10 @@
   const originalFinishTurn = proto._finishTurn;
   if (typeof originalFinishTurn === 'function') {
     proto._finishTurn = function () {
-      this._runUniqueMechanicProviders('turnEnd', { turn: this.state.turn }, { includeReserve: true });
+      this._runUniqueMechanicProviders('turnEnd', { turn: this.state.turn });
       const result = originalFinishTurn.call(this);
       if (!this.state.winner && this.state.phase === 'command') {
-        this._runUniqueMechanicProviders('turnStart', { turn: this.state.turn }, { includeReserve: true });
+        this._runUniqueMechanicProviders('turnStart', { turn: this.state.turn });
       }
       return result;
     };
