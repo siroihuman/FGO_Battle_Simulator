@@ -70,4 +70,4 @@ jobs:
           fi
           git push origin main
 
-# Verification rerun after isolating the generic test party.
+# Merge-triggered verification after generic test isolation.
