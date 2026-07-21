@@ -69,3 +69,5 @@ jobs:
             git commit -m "Record Artoria Caster verification failure"
           fi
           git push origin main
+
+# Verification rerun after isolating the generic test party.
