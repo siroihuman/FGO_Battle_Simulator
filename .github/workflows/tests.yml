@@ -23,50 +23,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply Alice Liddell migration
+      - name: Apply Alice Liddell and Issue 19 migrations
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           node scripts/apply-alice-liddell-fix.js
           node scripts/fix-issue19-regression-tests.js
+          node scripts/fix-issue19-aura-target.js
       - name: Syntax check
         run: |
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run Alice Liddell regression tests
         run: node tests/alice-liddell-tests.js
       - name: Run all regression tests
-        shell: bash
         run: |
-          set +e
-          status=0
-          : > alice-postfix-tests.log
+          set -e
           for file in tests/*-tests.js; do
-            echo "=== $file ===" >> alice-postfix-tests.log
-            node "$file" >> alice-postfix-tests.log 2>&1 || status=1
+            echo "=== $file ==="
+            node "$file"
           done
-          cat alice-postfix-tests.log
-          echo "$status" > /tmp/alice-postfix-status
-          exit 0
-      - name: Record post-fix failure
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          status=$(cat /tmp/alice-postfix-status)
-          if [ "$status" -ne 0 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -f alice-postfix-tests.log
-            git commit -m "Record post-fix Alice integration failure"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
-      - name: Stop on post-fix failure
-        run: |
-          status=$(cat /tmp/alice-postfix-status)
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
       - name: Commit verified Alice Liddell implementation
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -f --ignore-unmatch alice-integration-tests.log alice-postfix-tests.log
-          git add js/servants.js tests/trait-trigger-aura-effects-tests.js tests/trigger-lifecycle-effects-tests.js tests/turn-field-effects-tests.js
+          git add js/servants.js js/trait-trigger-aura-effects.js tests/trait-trigger-aura-effects-tests.js tests/trigger-lifecycle-effects-tests.js tests/turn-field-effects-tests.js
           git commit -m "Implement Alice Liddell servant data"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
