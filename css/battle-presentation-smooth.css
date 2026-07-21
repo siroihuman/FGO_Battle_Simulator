@@ -1,0 +1,36 @@
+/* v1.8.2 smooth full-screen gauge animation */
+.battle-resolution-overlay,
+.battle-resolution-surface,
+.battle-resolution-unit {
+  contain: layout style paint;
+}
+
+.battle-resolution-surface {
+  transform: translateZ(0);
+}
+
+.battle-resolution-unit .bar > div[data-overlay-gauge-fill] {
+  width: 100% !important;
+  transform-origin: left center;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.battle-resolution-unit.np-used .np-line em {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 5px;
+  border: 1px solid rgba(240, 201, 111, .45);
+  border-radius: 999px;
+  color: var(--gold-strong);
+  background: rgba(133, 96, 28, .22);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.command-panel-overlay-suspended {
+  visibility: hidden;
+  pointer-events: none;
+}
