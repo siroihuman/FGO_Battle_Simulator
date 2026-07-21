@@ -23,12 +23,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply servant No.050 migration
+      - name: Apply data migration
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: node scripts/apply-juana-mad-queen-fix.js
       - name: Syntax check
         run: |
           find js tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run common feature tests
+        run: node tests/class-affinity-special-effects-tests.js
+      - name: Run target data tests
+        run: node tests/juana-mad-queen-tests.js
       - name: Run all regression tests
         run: |
           set -e
@@ -36,11 +40,11 @@ jobs:
             echo "=== $file ==="
             node "$file"
           done
-      - name: Commit verified servant No.050 data
+      - name: Commit verified data
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add js/servants.js
-          git commit -m "Fix servant No.050 data"
+          git commit -m "Update servant data"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
