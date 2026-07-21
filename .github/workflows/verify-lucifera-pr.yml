@@ -33,6 +33,34 @@ jobs:
           block = workflow.split(start, 1)[1].split(end, 1)[0]
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
           exec(compile(code, 'embedded-lucifera-implementation.py', 'exec'))
+
+          test_path = Path('tests/lucifera-tests.js')
+          test_text = test_path.read_text(encoding='utf-8')
+          old = """  const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
+  oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
+
+  const result = engine.useSkill(lucifera.id, 0, oshichi.id);
+  assert.strictEqual(result.ok, true);
+  [lucifera, koyanskaya, oshichi].forEach((ally) => {
+    assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 30);
+    assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 20);
+  });"""
+          new = """  const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
+  oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
+  const before = new Map([lucifera, koyanskaya, oshichi].map((ally) => [ally.id, {
+    buster: engine._statusTotal(ally, 'cardUp', { card: 'buster' }),
+    attack: engine._statusTotal(ally, 'attackUp')
+  }]));
+
+  const result = engine.useSkill(lucifera.id, 0, oshichi.id);
+  assert.strictEqual(result.ok, true);
+  [lucifera, koyanskaya, oshichi].forEach((ally) => {
+    assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }) - before.get(ally.id).buster, 30);
+    assert.strictEqual(engine._statusTotal(ally, 'attackUp') - before.get(ally.id).attack, 20);
+  });"""
+          if old not in test_text:
+              raise SystemExit('Lucifera S1 assertion block not found')
+          test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
           PY
 
       - name: Check all JavaScript syntax
