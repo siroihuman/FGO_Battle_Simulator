@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.5.2',
+    version: '1.6.0',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
@@ -23,6 +23,9 @@
       attackUp: 'Attackup.webp',
       defenseUp: 'Defenseup.webp',
       cardUp: 'Statusup.webp',
+      cardDown: 'Statusup.webp',
+      cardPowerUp: 'Statusup.webp',
+      cardPowerDown: 'Statusup.webp',
       critUp: 'Critdmgup.webp',
       cardCritUp: 'Critdmgup.webp',
       starRateUp: 'Stargainup.webp',
