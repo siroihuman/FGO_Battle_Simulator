@@ -54,7 +54,10 @@
     return {
       wave,
       turn: Number(state.turn || 1),
+      phase: state.phase || 'command',
       winner: state.winner || null,
+      stars: Math.max(0, Number(state.stars || 0)),
+      nextStars: Math.max(0, Number(state.nextStars || 0)),
       allies,
       enemies,
       units
