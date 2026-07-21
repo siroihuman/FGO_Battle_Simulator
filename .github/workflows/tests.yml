@@ -70,3 +70,5 @@ jobs:
             git commit -m "Record Skadi Caster verification failure"
           fi
           git push origin main
+
+# Verification rerun after isolating limited crit status lookup.
