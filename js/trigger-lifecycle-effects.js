@@ -21,6 +21,34 @@
   const isActive = (status) => Boolean(status) &&
     (status.remaining == null || status.remaining < 0 || status.remaining > 0) &&
     (status.uses == null || status.uses > 0);
+  const TARGET_CONDITION_KINDS = new Set(['targetHasTrait', 'targetHasStatus']);
+
+  function conditionNeedsTarget(condition) {
+    if (!condition) return false;
+    if (TARGET_CONDITION_KINDS.has(condition.kind)) return true;
+    if (condition.kind === 'not') return conditionNeedsTarget(condition.condition);
+    if (condition.kind === 'all' || condition.kind === 'any') {
+      return (condition.conditions || []).some(conditionNeedsTarget);
+    }
+    return false;
+  }
+
+  // 効果対象がまだ確定していない外側の共通条件判定では、対象依存条件を保留する。
+  // 候補対象ごとの絞り込み時に、実際のtargetを渡して最終判定する。
+  const originalConditionMet = proto._conditionMet;
+  proto._conditionMet = function (condition, context) {
+    const detail = context || {};
+    if (!detail.target && conditionNeedsTarget(condition)) return true;
+    return originalConditionMet.call(this, condition, detail);
+  };
+
+  const originalRunTriggerEffect = proto._runTriggerEffect;
+  proto._runTriggerEffect = function (owner, status, eventName, context) {
+    if (status && status.provider === true && status.providerFrontlineOnly !== false && owner && owner.frontline === false) {
+      return { triggered: false, reason: 'providerInactive' };
+    }
+    return originalRunTriggerEffect.call(this, owner, status, eventName, context);
+  };
 
   const originalAddStatus = proto._addStatus;
   proto._addStatus = function (unit, effect, value, source) {
@@ -65,6 +93,7 @@
 
   const API = {
     delayedEvents: ['turnStart', 'turnEnd'],
+    targetDependentConditions: Array.from(TARGET_CONDITION_KINDS),
     timing: {
       turnStart: '状態減少とターン更新後に発動',
       turnEnd: '状態減少前のターン終了時に発動'
