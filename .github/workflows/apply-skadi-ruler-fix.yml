@@ -1,0 +1,40 @@
+name: Apply Skadi Ruler Fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-skadi-ruler-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply servant migration
+        run: node scripts/apply-skadi-ruler-fix.js
+      - name: Syntax check
+        run: node --check js/servants.js
+      - name: Commit servant data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/servants.js
+          if git diff --cached --quiet; then
+            echo "No servant data changes to commit."
+            exit 0
+          fi
+          git commit -m "Fix Skadi Ruler servant data"
+          git push
