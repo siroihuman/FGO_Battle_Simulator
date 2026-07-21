@@ -25,45 +25,27 @@ jobs:
           node-version: '22'
       - name: Apply Alice Liddell migration
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: node scripts/apply-alice-liddell-fix.js
+        run: |
+          node scripts/apply-alice-liddell-fix.js
+          node scripts/fix-issue19-regression-tests.js
       - name: Syntax check
         run: |
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run Alice Liddell regression tests
         run: node tests/alice-liddell-tests.js
       - name: Run all regression tests
-        shell: bash
         run: |
-          set +e
-          status=0
+          set -e
           for file in tests/*-tests.js; do
-            echo "=== $file ===" >> alice-integration-tests.log
-            node "$file" >> alice-integration-tests.log 2>&1 || status=1
+            echo "=== $file ==="
+            node "$file"
           done
-          cat alice-integration-tests.log
-          echo "$status" > /tmp/alice-integration-status
-          exit 0
-      - name: Record integration failure
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          status=$(cat /tmp/alice-integration-status)
-          if [ "$status" -ne 0 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -f alice-integration-tests.log
-            git commit -m "Record Alice integration test failure"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
-      - name: Stop on integration failure
-        run: |
-          status=$(cat /tmp/alice-integration-status)
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
-      - name: Commit verified Alice Liddell data
+      - name: Commit verified Alice Liddell implementation
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -f --ignore-unmatch alice-integration-tests.log
-          git add js/servants.js
-          git commit -m "Fix Alice Liddell servant data"
+          git add js/servants.js tests/trait-trigger-aura-effects-tests.js tests/trigger-lifecycle-effects-tests.js tests/turn-field-effects-tests.js
+          git commit -m "Implement Alice Liddell servant data"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
