@@ -1,0 +1,66 @@
+.class-passive-panel {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(5, 9, 18, 0.46);
+}
+
+.class-effect-fold {
+  overflow: hidden;
+  border: 1px solid rgba(190, 208, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(18, 25, 42, 0.72);
+}
+
+.class-effect-fold > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+  padding: 7px 10px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 11px;
+  font-weight: 800;
+  user-select: none;
+}
+
+.class-effect-fold > summary::-webkit-details-marker { display: none; }
+.class-effect-fold > summary::after {
+  content: "＋";
+  margin-left: auto;
+  font-size: 13px;
+}
+.class-effect-fold[open] > summary::after { content: "−"; }
+.class-effect-fold > summary small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.class-skill-fold > summary { color: #a9d6ff; }
+.class-score-fold > summary { color: var(--gold-strong); }
+.class-score-fold { border-color: rgba(240, 201, 111, 0.28); }
+
+.class-effect-body {
+  padding: 0 8px 8px;
+  border-top: 1px solid rgba(190, 208, 255, 0.12);
+}
+.class-effect-body .buff-icons { margin-top: 8px; }
+.class-score-fold .buff-icon.passive img {
+  outline-color: var(--gold-strong);
+}
+
+@media (max-width: 700px) {
+  .class-passive-panel { min-width: 0; }
+  .class-effect-body .buff-icons {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 2px 2px 5px;
+  }
+  .class-effect-body .buff-icon { flex: 0 0 46px; }
+}
