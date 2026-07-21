@@ -11,7 +11,7 @@ const LIFECYCLE = require('../js/trigger-lifecycle-effects.js');
 function makeEngine() {
   return new BattleEngine({
     seed: 314058,
-    party: [{ servantId: 'aliceLiddell', skillLevel: 10, npLevel: 1 }],
+    party: [{ servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1 }],
     enemies: [{
       enabled: true,
       name: 'ライフサイクル検証敵',

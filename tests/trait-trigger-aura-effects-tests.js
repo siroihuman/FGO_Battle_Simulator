@@ -10,6 +10,7 @@ require('../js/combat-defense-effects.js');
 require('../js/hp-loss-effects.js');
 require('../js/turn-field-effects.js');
 const TRAIT = require('../js/trait-trigger-aura-effects.js');
+require('../js/trigger-lifecycle-effects.js');
 
 function enemyConfig(overrides = {}) {
   return {
@@ -34,7 +35,7 @@ function makeEngine(options = {}) {
   return new BattleEngine({
     seed: 314058,
     party: options.party || [
-      { servantId: 'aliceLiddell', skillLevel: 10, npLevel: 1 },
+      { servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1 },
       { servantId: 'fenrir', skillLevel: 10, npLevel: 1 },
       { servantId: 'koyanskayaLight', skillLevel: 10, npLevel: 1 },
       { servantId: 'artoriaCaster', skillLevel: 10, npLevel: 1 }
@@ -294,16 +295,18 @@ test('控えを含む他の味方への弱体耐性ダウンオーラは動的�
   const engine = makeEngine();
   const provider = engine.getState().allies[0];
   const reserve = engine.getState().allies[3];
+  const providerBase = engine._statusTotal(provider, 'debuffResist');
+  const reserveBase = engine._statusTotal(reserve, 'debuffResist');
   addStatus(engine, provider, {
     type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
   }, -15);
   addStatus(engine, provider, {
     type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
   }, -15);
-  assert.strictEqual(engine._statusTotal(provider, 'debuffResist'), 0);
-  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), -30);
+  assert.strictEqual(engine._statusTotal(provider, 'debuffResist'), providerBase);
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), reserveBase - 30);
   provider.frontline = false;
-  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), 0);
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), reserveBase);
 });
 
 console.log('\n一時特性・条件対象・トリガー・常時オーラテストに合格しました。');

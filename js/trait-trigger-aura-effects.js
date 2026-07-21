@@ -30,7 +30,7 @@
   const META_KEYS = [
     'event', 'effect', 'effects', 'condition', 'targetCondition', 'traitDuration',
     'sourceDuration', 'delayTurns', 'triggerTurn', 'resolver', 'removeAfterTrigger',
-    'provider', 'providerFrontlineOnly', 'modifierType', 'conditionTarget',
+    'provider', 'providerFrontlineOnly', 'modifierType', 'conditionTarget', 'target',
     'temporaryTraitDebuff', 'includeReserve', 'label', 'stackQuery'
   ];
 
