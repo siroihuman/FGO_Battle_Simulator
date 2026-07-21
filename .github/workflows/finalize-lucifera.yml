@@ -19,38 +19,17 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Insert Lucifera data and update regression fixtures
+      - name: Insert Lucifera data
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-
           workflow = Path('.github/workflows/implement-lucifera.yml').read_text(encoding='utf-8')
           start = "          python - <<'PY'\n"
           end = "\n          PY"
           block = workflow.split(start, 1)[1].split(end, 1)[0]
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
           exec(compile(code, 'embedded-lucifera-implementation.py', 'exec'))
-
-          lucifera_test = Path('tests/lucifera-tests.js')
-          lucifera_text = lucifera_test.read_text(encoding='utf-8')
-          old_cooldown = "  lucifera.cooldowns = lucifera.cooldowns.map(() => 5);"
-          new_cooldown = "  lucifera.cooldowns = [5, 5, 0];"
-          if old_cooldown not in lucifera_text:
-              raise SystemExit('Lucifera S3 cooldown setup not found')
-          lucifera_test.write_text(lucifera_text.replace(old_cooldown, new_cooldown, 1), encoding='utf-8')
-
-          engine_test = Path('tests/engine-tests.js')
-          engine_text = engine_test.read_text(encoding='utf-8')
-          old_registry = """test('実装サーヴァントは9騎', () => {
-  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
-});"""
-          new_registry = """test('実装サーヴァントは10騎', () => {
-  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'lucifera', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
-});"""
-          if old_registry not in engine_text:
-              raise SystemExit('Servant registry regression block not found')
-          engine_test.write_text(engine_text.replace(old_registry, new_registry, 1), encoding='utf-8')
           PY
 
       - name: Check all JavaScript syntax
@@ -67,17 +46,17 @@ jobs:
         run: |
           set +e
           : > all-tests.log
+          failed=0
           for test_file in tests/*-tests.js; do
             echo "Running ${test_file}" | tee -a all-tests.log
             node "$test_file" >> all-tests.log 2>&1
             status=$?
             if [ "$status" -ne 0 ]; then
-              echo "status=$status" >> "$GITHUB_OUTPUT"
-              cat all-tests.log
-              exit 0
+              failed=$status
+              break
             fi
           done
-          echo "status=0" >> "$GITHUB_OUTPUT"
+          echo "result=$failed" >> "$GITHUB_OUTPUT"
           cat all-tests.log
 
       - name: Upload regression log
@@ -88,7 +67,7 @@ jobs:
           if-no-files-found: error
 
       - name: Commit implementation and remove temporary files
-        if: steps.tests.outputs.status == '0'
+        if: steps.tests.outputs.result == '0'
         shell: bash
         run: |
           set -euo pipefail
@@ -104,6 +83,6 @@ jobs:
           git push origin HEAD:${{ github.head_ref }}
 
       - name: Fail when regression tests fail
-        if: steps.tests.outputs.status != '0'
+        if: steps.tests.outputs.result != '0'
         shell: bash
         run: exit 1
