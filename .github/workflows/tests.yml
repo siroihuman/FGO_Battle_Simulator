@@ -29,6 +29,8 @@ jobs:
       - name: Syntax check
         run: |
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run Alice Liddell regression tests
+        run: node tests/alice-liddell-tests.js
       - name: Run all regression tests
         run: |
           set -e
