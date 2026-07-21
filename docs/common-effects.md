@@ -1,6 +1,6 @@
 # 共通状態・トリガー効果
 
-このファイルに記載した効果は`js/common-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
+このファイルに記載した効果は`js/common-effects.js`および`js/common-effects-extra-attack.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
 
 ## 通常攻撃時に確率で弱体付与
 
@@ -11,14 +11,17 @@
   debuffType: 'charm',
   chance: 50,
   debuffDuration: 1,
-  duration: 3,
-  normalCardsOnly: true
+  duration: 3
 }
 ```
 
-- 発動する攻撃：選択したQuick／Arts／Buster通常カード
-- 発動しない攻撃：宝具、Extra Attack
+- 発動する攻撃：選択したQuick／Arts／Buster通常カード、Extra Attack
+- 発動しない攻撃：宝具
+- Extra AttackはHit数にかかわらず、攻撃全体の終了後に1回だけ判定されます。
+- 通常カード3枚＋Extra AttackのBrave Chainでは、通常カード3回とExtra Attack1回の合計4回判定されます。
 - 同じ状態を複数付与した場合、各状態が攻撃1回につき1回ずつ判定されます。
+
+旧記述にある`normalCardsOnly`は互換性のため状態データへ保持されますが、「通常攻撃時」の判定からExtra Attackを除外する指定には使用しません。Quick／Arts／BusterとExtra Attackを含み、宝具だけを除外するのが共通仕様です。
 
 ## 弱体付与成功率
 
@@ -141,5 +144,16 @@ afterNormalAttack
 beforeEnemyAction
 turnEnd
 ```
+
+`afterNormalAttack`は次のタイミングで1回ずつ呼び出されます。
+
+```text
+Quick通常カード解決後
+Arts通常カード解決後
+Buster通常カード解決後
+Extra Attack全Hit解決後
+```
+
+宝具解決後には呼び出されません。Extra AttackではHitごとではなく、Extra Attack全体につき1回だけ呼び出されます。
 
 弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の消費は`_consumeDefenseStatus`で共通化されています。
