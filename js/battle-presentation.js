@@ -29,10 +29,11 @@
     };
   }
 
-  function unitSnapshot(unit, side) {
+  function unitSnapshot(unit, side, wave) {
     return {
       id: unit.id,
       side,
+      wave: Number(wave || 1),
       name: unit.name,
       servantId: unit.servantId || (unit.data && unit.data.id) || null,
       slot: Number(unit.slot || 0),
@@ -45,12 +46,13 @@
   }
 
   function snapshot(state) {
-    const allies = (state.allies || []).map((unit) => unitSnapshot(unit, 'ally'));
-    const enemies = (state.enemies || []).map((unit) => unitSnapshot(unit, 'enemy'));
+    const wave = Number(state.wave || 1);
+    const allies = (state.allies || []).map((unit) => unitSnapshot(unit, 'ally', wave));
+    const enemies = (state.enemies || []).map((unit) => unitSnapshot(unit, 'enemy', wave));
     const units = new Map();
     allies.concat(enemies).forEach((unit) => units.set(unit.id, unit));
     return {
-      wave: Number(state.wave || 1),
+      wave,
       turn: Number(state.turn || 1),
       winner: state.winner || null,
       allies,
@@ -60,8 +62,16 @@
   }
 
   function animationTarget(beforeUnit, afterSnapshot) {
-    const current = afterSnapshot && afterSnapshot.units ? afterSnapshot.units.get(beforeUnit.id) : null;
-    if (current) return current;
+    const waveChanged = Boolean(
+      beforeUnit &&
+      beforeUnit.side === 'enemy' &&
+      afterSnapshot &&
+      Number(beforeUnit.wave || 1) !== Number(afterSnapshot.wave || 1)
+    );
+    if (!waveChanged) {
+      const current = afterSnapshot && afterSnapshot.units ? afterSnapshot.units.get(beforeUnit.id) : null;
+      if (current) return current;
+    }
     return {
       ...beforeUnit,
       alive: false,
