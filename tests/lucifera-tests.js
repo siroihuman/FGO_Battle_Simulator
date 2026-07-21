@@ -154,7 +154,7 @@ test('S2は全体NP30%・選択対象20%・自身10%を効果順通り加算', (
 test('S3は悪の味方だけCTを1進め、選択対象の現在NPを倍化してターン終了時に強化解除', () => {
   const engine = makeEngine({ thirdNp: 50 });
   const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
-  lucifera.cooldowns = lucifera.cooldowns.map(() => 5);
+  lucifera.cooldowns = [5, 5, 0];
   koyanskaya.cooldowns = koyanskaya.cooldowns.map(() => 5);
   oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
 
