@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - implement-servant-page-795
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: read
