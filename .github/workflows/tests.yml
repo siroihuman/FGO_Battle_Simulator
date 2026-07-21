@@ -33,6 +33,12 @@ jobs:
           status=$?
           echo "migration_status=$status" >> skadi-caster-verification.log
 
+          echo '=== Common test isolation ===' >> skadi-caster-verification.log
+          node scripts/fix-combat-defense-test-isolation.js >> skadi-caster-verification.log 2>&1
+          isolation_status=$?
+          echo "isolation_status=$isolation_status" >> skadi-caster-verification.log
+          if [ "$isolation_status" -ne 0 ]; then status=1; fi
+
           echo '=== Syntax check ===' >> skadi-caster-verification.log
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check >> skadi-caster-verification.log 2>&1
           syntax_status=$?
@@ -56,9 +62,8 @@ jobs:
           status=$(cat /tmp/skadi-caster-status)
           if [ "$status" -eq 0 ]; then
             git show dde29044c922ff86dcee60d4a89db5de1107ccb4:.github/workflows/tests.yml > .github/workflows/tests.yml
-            git rm scripts/apply-skadi-caster-fix.js
-            rm -f skadi-caster-verification.log
-            git add js/servants.js tests/skadi-caster-tests.js .github/workflows/tests.yml
+            git rm scripts/apply-skadi-caster-fix.js scripts/fix-combat-defense-test-isolation.js skadi-caster-verification.log
+            git add js/servants.js tests/skadi-caster-tests.js tests/combat-defense-effects-tests.js .github/workflows/tests.yml
             git commit -m "Fix Skadi Caster servant data"
           else
             git add skadi-caster-verification.log
