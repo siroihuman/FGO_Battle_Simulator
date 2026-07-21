@@ -289,20 +289,18 @@ All unique mechanics tests passed.
 ✓ 攻撃後条件トリガーが対象特性を参照して状態を付与する
 ✓ ターン開始トリガーはuses回だけ発動する
 ✓ 遅延resolverは指定ターンにスタック数を参照して1回だけ発動する
-✓ 虚構概念対象へのNP獲得オーラは他の味方にも働き非対象では働かない
-✓ 虚構概念の敵だけ攻撃力ダウンオーラを受け提供者戦闘不能後は停止する
-✗ 控えを含む他の味方への弱体耐性ダウンオーラは動的に加算される
+✗ 虚構概念対象へのNP獲得オーラは他の味方にも働き非対象では働かない
 /home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:67
     throw error;
     ^
 
-AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
 
-12 !== 0
+  assert.ok(withAura > withoutProvider)
 
-    at /home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:304:10
+    at /home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:271:10
     at test (/home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:63:5)
-    at Object.<anonymous> (/home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:294:1)
+    at Object.<anonymous> (/home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/tests/trait-trigger-aura-effects-tests.js:254:1)
     at Module._compile (node:internal/modules/cjs/loader:1781:14)
     at Object..js (node:internal/modules/cjs/loader:1913:10)
     at Module.load (node:internal/modules/cjs/loader:1505:32)
@@ -312,9 +310,9 @@ AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
     at node:internal/main/run_main_module:36:49 {
   generatedMessage: true,
   code: 'ERR_ASSERTION',
-  actual: 12,
-  expected: 0,
-  operator: 'strictEqual',
+  actual: false,
+  expected: true,
+  operator: '==',
   diff: 'simple'
 }
 
