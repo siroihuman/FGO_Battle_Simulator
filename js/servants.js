@@ -9,6 +9,99 @@
   const levelValues = (values) => values;
 
   const SERVANTS = {
+      inugamiGyobu: {
+        id: 'inugamiGyobu',
+        no: '002',
+        name: '隠神刑部',
+        classId: 'caster',
+        rarity: 1,
+        maxLevel: 60,
+        maxHp: 7350,
+        atk: 5273,
+        levelStats: {
+          max: { hp: 7350, atk: 5273 },
+          100: { hp: 11330, atk: 8194 },
+          120: { hp: 13324, atk: 9657 }
+        },
+        attribute: 'earth',
+        traits: ['サーヴァント', '人型', '男性', '秩序', '善', '地の力', 'キャスター', '神性', 'ヒト科以外', 'ケモノ科', '魔獣型', '低レア'],
+        cards: ['quick', 'arts', 'arts', 'arts', 'buster'],
+        hits: { quick: 3, arts: 2, buster: 1, extra: 4, np: 3 },
+        na: 0.49,
+        nd: 3.00,
+        starRate: 10.7,
+        starWeight: 48,
+        deathRate: 36.0,
+        skillIcons: [
+          'skill-np-charge.png',
+          'skill-attack-up.png',
+          'skill-arts-up.png'
+        ],
+        skills: [
+          {
+            id: 'languageUnderstanding',
+            name: '言語理解 B',
+            baseCt: 7,
+            target: 'self',
+            description: `自身のNPを増やす[Lv]
+＋味方全体のNPを少し増やす`,
+            effects: [
+              { type: 'npCharge', target: 'self', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]) },
+              { type: 'npCharge', target: 'allAllies', value: 10 }
+            ]
+          },
+          {
+            id: 'familiarSummoning',
+            name: '眷属召喚 A+',
+            baseCt: 7,
+            target: 'self',
+            description: `味方全体の攻撃力をアップ[Lv](3T)
+＆Artsカード性能をアップ(3T)`,
+            effects: [
+              { type: 'attackUp', target: 'allAllies', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'cardUp', target: 'allAllies', card: 'arts', value: 20, duration: 3 }
+            ]
+          },
+          {
+            id: 'sorcery',
+            name: '妖術 B+',
+            baseCt: 7,
+            target: 'ally',
+            description: `自身のArtsカード性能をアップ[Lv](3T)
+＋味方単体のNP獲得量をアップ[Lv](3T)
+＆NPを少し増やす`,
+            effects: [
+              { type: 'cardUp', target: 'self', card: 'arts', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'npGainUp', target: 'selectedAlly', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },
+              { type: 'npCharge', target: 'selectedAlly', value: 10 }
+            ]
+          }
+        ],
+        passives: [
+          { name: '陣地作成 B', icon: 'class-territory-creation.png', effects: [{ type: 'cardUp', card: 'arts', value: 8 }] },
+          { name: '道具作成 B', icon: 'class-item-construction.png', effects: [{ type: 'debuffSuccess', value: 8 }] },
+          { name: '神格 C', icon: 'class-divinity.png', effects: [{ type: 'damagePlus', value: 200 }, { type: 'starRateUp', value: 6 }] }
+        ],
+        np: {
+          id: 'matsuyamaSodoHappyakuYadanukiMonogatari',
+          name: '松山騒動八百八狸物語',
+          reading: 'まつやまそうどうはっぴゃくやだぬきものがたり',
+          card: 'arts',
+          target: 'allEnemies',
+          hits: 3,
+          multipliers: [450, 600, 675, 712.5, 750],
+          description: `味方全体の攻撃力をアップ(3T)<OC:効果UP>
+＆Artsカード性能をアップ(3T)
+＋敵全体に強力な攻撃[Lv]`,
+          before: [
+            { type: 'attackUp', target: 'allAllies', ocValues: [10, 15, 20, 25, 30], duration: 3 },
+            { type: 'cardUp', target: 'allAllies', card: 'arts', value: 10, duration: 3 }
+          ],
+          after: []
+        },
+        source: 'https://w.atwiki.jp/siroi_human/pages/262.html'
+      },
+
       yaoyaOshichi: {
         id: 'yaoyaOshichi',
         no: '001',
