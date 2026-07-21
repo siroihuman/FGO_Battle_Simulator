@@ -34,6 +34,8 @@ jobs:
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run Alice Liddell regression tests
         run: node tests/alice-liddell-tests.js
+      - name: Run Issue 19 regression tests
+        run: node tests/trait-trigger-aura-effects-tests.js
       - name: Run all regression tests
         run: |
           set -e
