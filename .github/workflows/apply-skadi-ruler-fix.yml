@@ -1,4 +1,4 @@
-name: Apply Skadi Ruler Fix
+name: Verify Skadi Ruler Fix
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  apply:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,18 +23,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply servant migration
-        run: node scripts/apply-skadi-ruler-fix.js
       - name: Syntax check
-        run: node --check js/servants.js
-      - name: Commit servant data
+        run: find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run all regression tests
+        run: |
+          set -e
+          for file in tests/*-tests.js; do
+            echo "=== $file ==="
+            node "$file"
+          done
+      - name: Remove temporary migration tooling
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add js/servants.js
-          if git diff --cached --quiet; then
-            echo "No servant data changes to commit."
-            exit 0
-          fi
-          git commit -m "Fix Skadi Ruler servant data"
+          git rm scripts/apply-skadi-ruler-fix.js .github/workflows/apply-skadi-ruler-fix.yml
+          git commit -m "Remove temporary Skadi Ruler migration tooling"
           git push
