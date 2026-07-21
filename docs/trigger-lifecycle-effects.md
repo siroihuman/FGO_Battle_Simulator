@@ -76,7 +76,7 @@
 
 ## 対象依存条件
 
-`targetHasTrait`と`targetHasStatus`を含む条件は、効果対象が確定する前には失敗扱いにしません。候補対象を取得した後、対象ごとに最終判定します。
+`targetHasTrait`と`targetHasStatus`を含む通常効果の条件は、効果対象が確定する前には失敗扱いにしません。候補対象を取得した後、対象ごとに最終判定します。
 
 ```js
 condition: {
@@ -89,6 +89,70 @@ condition: {
 ```
 
 この形式でも、各対象が特性を持つかどうかを個別に判定できます。
+
+## 遅延評価型状態のcondition
+
+次の状態では、`condition`を状態付与時ではなく発動時・能力値参照時に評価します。
+
+```text
+triggerEffect
+beforeAttackApplyTemporaryTrait
+delayedEffect
+aura
+```
+
+例えば次の`triggerEffect`は、付与対象である使用者自身が〔チェック〕を持っていなくても正常に付与されます。`targetHasTrait`は`afterAttack`発火時の攻撃対象へ評価されます。
+
+```js
+{
+  type: 'triggerEffect',
+  target: 'self',
+  event: 'afterAttack',
+  duration: 3,
+  condition: {
+    kind: 'targetHasTrait',
+    key: 'チェック'
+  },
+  effect: {
+    type: 'temporaryTrait',
+    target: 'self',
+    trait: 'チェックメイト',
+    duration: 3
+  }
+}
+```
+
+`sourceHasTrait`と`sourceHasStatus`も同様に、状態を付与する時点ではなくイベント発火時の状態所有者へ評価します。
+
+### 状態の初期付与対象を絞る場合
+
+遅延評価型状態を付与する対象自体を条件で絞る場合は、`condition`ではなく`targetCondition`を使用します。
+
+```js
+{
+  type: 'triggerEffect',
+  target: 'allAlliesIncludingReserve',
+  targetCondition: {
+    kind: 'targetHasTrait',
+    key: '不思議の国の住人'
+  },
+  event: 'turnStart',
+  duration: 3,
+  condition: {
+    kind: 'sourceHasTrait',
+    key: '起動'
+  },
+  effect: {
+    type: 'npCharge',
+    target: 'self',
+    value: 5
+  }
+}
+```
+
+この例では、`targetCondition`が状態の初期付与対象を絞り、`condition`は付与後の各ターン開始時に評価されます。
+
+通常の`npCharge`、`attackUp`、`temporaryTrait`などでは、従来どおり`condition`を対象ごとの効果適用条件として使用します。
 
 ## provider型トリガー
 
