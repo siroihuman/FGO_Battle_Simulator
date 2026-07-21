@@ -133,9 +133,10 @@ test('強化後S1は全体Buster30%・攻撃20%と選択対象への宝具換装
   assert.strictEqual(trigger.remaining, 1);
   assert.strictEqual(trigger.triggerLevel, 10);
 
+  const critBefore = engine._statusTotal(oshichi, 'critUp');
   engine._executeNp({ type: 'np', actorId: oshichi.id, card: 'quick' }, chainContext(), 0);
   assert.ok(oshichi.cooldowns.every((ct) => ct === 4));
-  assert.strictEqual(engine._statusTotal(oshichi, 'critUp'), 30);
+  assert.strictEqual(engine._statusTotal(oshichi, 'critUp') - critBefore, 30);
   assert.strictEqual(engine.getState().stars, 15);
   assert.strictEqual(oshichi.statuses.some((status) => status === trigger), false);
 });
