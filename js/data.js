@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.6.1',
+    version: '1.6.2',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
@@ -41,10 +41,12 @@
       ocUp: 'NPOvercharge.webp',
       invinciblePierce: 'Invinciblepierce.webp',
       sureHit: 'Invinciblepierce.webp',
+      antiEnforcementDefense: 'Invincible.webp',
       invincible: 'Invincible.webp',
       evade: 'Avoid.webp',
       guts: 'Gutsstatus.webp',
       deathResist: 'Instaresistup.webp',
+      critRateResist: 'Resistanceup.webp',
       debuffResist: 'Resistanceup.webp',
       mentalResist: 'Resistanceup.webp',
       debuffSuccess: 'Statusup.webp',
