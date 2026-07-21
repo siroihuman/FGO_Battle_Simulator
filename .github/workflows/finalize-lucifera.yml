@@ -19,7 +19,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Insert Lucifera data and correct test baselines
+      - name: Insert Lucifera data and correct S3 test setup
         shell: bash
         run: |
           python - <<'PY'
@@ -34,15 +34,10 @@ jobs:
 
           test_path = Path('tests/lucifera-tests.js')
           test_text = test_path.read_text(encoding='utf-8')
-          old = """  engine._executeNp({ type: 'np', actorId: oshichi.id, card: 'quick' }, chainContext(), 0);
-  assert.ok(oshichi.cooldowns.every((ct) => ct === 4));
-  assert.strictEqual(engine._statusTotal(oshichi, 'critUp'), 30);"""
-          new = """  const critBefore = engine._statusTotal(oshichi, 'critUp');
-  engine._executeNp({ type: 'np', actorId: oshichi.id, card: 'quick' }, chainContext(), 0);
-  assert.ok(oshichi.cooldowns.every((ct) => ct === 4));
-  assert.strictEqual(engine._statusTotal(oshichi, 'critUp') - critBefore, 30);"""
+          old = "  lucifera.cooldowns = lucifera.cooldowns.map(() => 5);"
+          new = "  lucifera.cooldowns = [5, 5, 0];"
           if old not in test_text:
-              raise SystemExit('Lucifera afterNp crit assertion block not found')
+              raise SystemExit('Lucifera S3 cooldown setup not found')
           test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
           PY
 
