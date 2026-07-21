@@ -1,0 +1,32 @@
+name: Fetch atwiki page 795
+
+on:
+  push:
+    branches:
+      - implement-servant-page-795
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch source and rendered page
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 3 --user-agent 'Mozilla/5.0' \
+            'https://w.atwiki.jp/siroi_human/pages/795.html' \
+            -o page-795.html
+          curl -L --fail --retry 3 --user-agent 'Mozilla/5.0' \
+            'https://w.atwiki.jp/siroi_human/?cmd=backup&action=source&pageid=795&num=0' \
+            -o page-795-source.html
+      - name: Upload fetched page
+        uses: actions/upload-artifact@v4
+        with:
+          name: atwiki-page-795
+          path: |
+            page-795.html
+            page-795-source.html
+          if-no-files-found: error
