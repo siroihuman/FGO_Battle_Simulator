@@ -40,7 +40,7 @@ function makeEngine(options = {}) {
     startingStars: options.startingStars ?? 0,
     party: options.party || [
       { servantId: 'lucifera', skillLevel: 10, npLevel: options.npLevel || 1, startingNp: options.startingNp ?? 0 },
-      { servantId: 'juanaMadQueen', skillLevel: 10, npLevel: 1, startingNp: options.secondNp ?? 0 },
+      { servantId: 'koyanskayaLight', skillLevel: 10, npLevel: 1, startingNp: options.secondNp ?? 0 },
       { servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1, startingNp: options.thirdNp ?? 0 }
     ],
     enemies: [baseEnemy(options.enemy)]
@@ -109,12 +109,12 @@ test('基本データ・特性・template必須項目を資料通り登録', () 
 test('強化後S1は全体Buster30%・攻撃20%と選択対象への宝具換装・afterNpを付与', () => {
   const engine = makeEngine({ thirdNp: 100 });
   engine.rng = () => 0.5;
-  const [lucifera, juana, oshichi] = engine.getState().allies;
+  const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
   oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
 
   const result = engine.useSkill(lucifera.id, 0, oshichi.id);
   assert.strictEqual(result.ok, true);
-  [lucifera, juana, oshichi].forEach((ally) => {
+  [lucifera, koyanskaya, oshichi].forEach((ally) => {
     assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 30);
     assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 20);
   });
@@ -138,25 +138,25 @@ test('強化後S1は全体Buster30%・攻撃20%と選択対象への宝具換装
 
 test('S2は全体NP30%・選択対象20%・自身10%を効果順通り加算', () => {
   const engine = makeEngine();
-  const [lucifera, juana, oshichi] = engine.getState().allies;
-  const result = engine.useSkill(lucifera.id, 1, juana.id);
+  const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
+  const result = engine.useSkill(lucifera.id, 1, koyanskaya.id);
   assert.strictEqual(result.ok, true);
   assert.strictEqual(lucifera.np, 40);
-  assert.strictEqual(juana.np, 50);
+  assert.strictEqual(koyanskaya.np, 50);
   assert.strictEqual(oshichi.np, 30);
 });
 
 test('S3は悪の味方だけCTを1進め、選択対象の現在NPを倍化してターン終了時に強化解除', () => {
   const engine = makeEngine({ thirdNp: 50 });
-  const [lucifera, juana, oshichi] = engine.getState().allies;
+  const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
   lucifera.cooldowns = lucifera.cooldowns.map(() => 5);
-  juana.cooldowns = juana.cooldowns.map(() => 5);
+  koyanskaya.cooldowns = koyanskaya.cooldowns.map(() => 5);
   oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
 
   const result = engine.useSkill(lucifera.id, 2, oshichi.id);
   assert.strictEqual(result.ok, true);
   assert.deepStrictEqual(lucifera.cooldowns, [4, 4, 7]);
-  assert.deepStrictEqual(juana.cooldowns, [4, 4, 4]);
+  assert.deepStrictEqual(koyanskaya.cooldowns, [4, 4, 4]);
   assert.deepStrictEqual(oshichi.cooldowns, [5, 5, 5]);
   assert.strictEqual(oshichi.np, 100);
   const endTrigger = oshichi.statuses.find((status) => status.type === 'triggerEffect' && status.event === 'turnEnd');
@@ -201,7 +201,7 @@ test('強化後宝具を資料通り定義', () => {
 test('宝具は攻撃前に敵へ悪を付与してOC特攻を成立させ、宝具後に味方へ悪と強化解除耐性を付与', () => {
   const engine = makeEngine({ startingNp: 300 });
   engine.rng = () => 0.5;
-  const [actor, juana, oshichi] = engine.getState().allies;
+  const [actor, koyanskaya, oshichi] = engine.getState().allies;
   const target = engine.getState().enemies[0];
   let evilBeforeDamage = false;
   let specialMultiplier = 0;
@@ -219,13 +219,13 @@ test('宝具は攻撃前に敵へ悪を付与してOC特攻を成立させ、宝
   assert.strictEqual(enemyEvil.remaining, 3);
   assert.strictEqual(enemyEvil.debuff, true);
 
-  [juana, oshichi].forEach((ally) => {
+  [koyanskaya, oshichi].forEach((ally) => {
     const evil = ally.statuses.find((status) => status.type === 'temporaryTrait' && status.trait === '悪');
     assert.ok(evil);
     assert.strictEqual(evil.remaining, 3);
   });
   assert.strictEqual(actor.statuses.some((status) => status.type === 'temporaryTrait' && status.trait === '悪'), false);
-  [actor, juana, oshichi].forEach((ally) => {
+  [actor, koyanskaya, oshichi].forEach((ally) => {
     const resist = ally.statuses.find((status) => status.type === 'buffRemovalResist');
     assert.ok(resist);
     assert.strictEqual(resist.value, 100);
