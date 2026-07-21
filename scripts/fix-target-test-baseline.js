@@ -25,11 +25,12 @@ const to = `test('強化後S2はNP20%・攻撃力20%・スター発生率100%・
   assert.strictEqual(actor.np, 20);
   assert.strictEqual(engine._statusTotal(actor, 'attackUp') - attackBefore, 20);
   assert.strictEqual(engine._statusTotal(actor, 'starRateUp') - starRateBefore, 100);
-  const sureHit = actor.statuses.find((status) => status.type === 'sureHit' && status.source === '幽閉されし狂女王 B');
+  const sureHit = actor.statuses.find((status) => status.type === 'sureHit');
   assert.ok(sureHit);
+  assert.strictEqual(sureHit.source, actor.name);
   assert.strictEqual(sureHit.remaining, 3);
 });`;
 const count = source.split(from).length - 1;
 if (count !== 1) throw new Error(`Expected one S2 test block, found ${count}.`);
 fs.writeFileSync(path, source.replace(from, to), 'utf8');
-console.log('Updated target test to compare skill deltas.');
+console.log('Updated target test to compare skill deltas and common status source.');
