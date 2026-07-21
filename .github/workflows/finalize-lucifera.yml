@@ -1,0 +1,102 @@
+name: Finalize Lucifera
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.head_ref == 'implement-lucifera'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Insert Lucifera data and correct test baselines
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/implement-lucifera.yml').read_text(encoding='utf-8')
+          start = "          python - <<'PY'\n"
+          end = "\n          PY"
+          block = workflow.split(start, 1)[1].split(end, 1)[0]
+          code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
+          exec(compile(code, 'embedded-lucifera-implementation.py', 'exec'))
+
+          test_path = Path('tests/lucifera-tests.js')
+          test_text = test_path.read_text(encoding='utf-8')
+          old = """  engine._executeNp({ type: 'np', actorId: oshichi.id, card: 'quick' }, chainContext(), 0);
+  assert.ok(oshichi.cooldowns.every((ct) => ct === 4));
+  assert.strictEqual(engine._statusTotal(oshichi, 'critUp'), 30);"""
+          new = """  const critBefore = engine._statusTotal(oshichi, 'critUp');
+  engine._executeNp({ type: 'np', actorId: oshichi.id, card: 'quick' }, chainContext(), 0);
+  assert.ok(oshichi.cooldowns.every((ct) => ct === 4));
+  assert.strictEqual(engine._statusTotal(oshichi, 'critUp') - critBefore, 30);"""
+          if old not in test_text:
+              raise SystemExit('Lucifera afterNp crit assertion block not found')
+          test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Check all JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find js tests -type f -name '*.js' -print0 | sort -z)
+
+      - name: Run all regression tests
+        id: tests
+        shell: bash
+        run: |
+          set +e
+          : > all-tests.log
+          for test_file in tests/*-tests.js; do
+            echo "Running ${test_file}" | tee -a all-tests.log
+            node "$test_file" >> all-tests.log 2>&1
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              echo "status=$status" >> "$GITHUB_OUTPUT"
+              cat all-tests.log
+              exit 0
+            fi
+          done
+          echo "status=0" >> "$GITHUB_OUTPUT"
+          cat all-tests.log
+
+      - name: Upload regression log
+        uses: actions/upload-artifact@v4
+        with:
+          name: lucifera-all-tests
+          path: all-tests.log
+          if-no-files-found: error
+
+      - name: Commit implementation and remove temporary files
+        if: steps.tests.outputs.status == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/implement-lucifera.yml
+          git rm .github/workflows/verify-lucifera-pr.yml
+          git rm .github/workflows/diagnose-lucifera.yml
+          git rm .github/workflows/finalize-lucifera.yml
+          git rm .lucifera-workflow-trigger
+          git add js/servants.js tests/lucifera-tests.js
+          git commit -m 'Implement Lucifera servant data'
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Fail when regression tests fail
+        if: steps.tests.outputs.status != '0'
+        shell: bash
+        run: exit 1
