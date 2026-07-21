@@ -318,10 +318,16 @@
         name: 'フェンリル',
         classId: 'berserker',
         rarity: 5,
+        maxLevel: 90,
         maxHp: 12514,
         atk: 13085,
+        levelStats: {
+          max: { hp: 12514, atk: 13085 },
+          100: { hp: 13710, atk: 14324 },
+          120: { hp: 16112, atk: 16813 }
+        },
         attribute: 'beast',
-        traits: ['サーヴァント', '神性', '魔獣型', '猛獣', '超巨大'],
+        traits: ['サーヴァント', '性別不明', '混沌', '獣の力', 'バーサーカー', '神性', 'ヒト科以外', 'ケモノ科', '魔獣型', '猛獣', '超巨大', '叛逆する者', '炎'],
         cards: ['quick', 'arts', 'buster', 'buster', 'buster'],
         hits: { quick: 5, arts: 2, buster: 2, extra: 5, np: 5 },
         na: 1.07,
@@ -340,7 +346,9 @@
             name: '神殺しの魔狼 B～EX',
             baseCt: 8,
             target: 'self',
-            description: '自身に〔神性〕特攻状態を付与し、クリティカル威力とスター発生率をアップする。',
+            description: `自身に〔神性〕特攻状態を付与[Lv](3T)
+＆クリティカル威力をアップ[Lv](3T)
+＆スター発生率をアップ[Lv](3T)`,
             effects: [
               { type: 'traitPowerUp', target: 'self', trait: '神性', values: levelValues([10, 12, 14, 16, 18, 20, 22, 24, 26, 30]), duration: 3 },
               { type: 'critUp', target: 'self', values: levelValues([10, 12, 14, 16, 18, 20, 22, 24, 26, 30]), duration: 3 },
@@ -352,7 +360,9 @@
             name: '魔狼阻む三本の拘束 A++',
             baseCt: 9,
             target: 'self',
-            description: '自身のNPと攻撃力を増加し、宝具使用時のOCを2段階引き上げる状態を付与する。',
+            description: `自身のNPを増やす[Lv]
+＆攻撃力をアップ[Lv](3T)
+＆宝具使用時のチャージ段階を2段階引き上げる状態を付与(1回・3T)`,
             effects: [
               { type: 'npCharge', target: 'self', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]) },
               { type: 'attackUp', target: 'self', values: levelValues([10, 12, 14, 16, 18, 20, 22, 24, 26, 30]), duration: 3 },
@@ -364,7 +374,10 @@
             name: '凍気迸る獣の四脚 A',
             baseCt: 9,
             target: 'self',
-            description: '自身のBusterスター集中度とBusterクリティカル威力をアップし、無敵貫通を付与。スターを獲得する。',
+            description: `自身のBusterカードのスター集中度をアップ[Lv](3T)
+＆Busterカードのクリティカル威力をアップ[Lv](3T)
+＆無敵貫通状態を付与(3T)
+＋スターを大量獲得[Lv]`,
             effects: [
               { type: 'cardStarWeightUp', target: 'self', card: 'buster', values: levelValues([3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 5000]), duration: 3 },
               { type: 'cardCritUp', target: 'self', card: 'buster', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
@@ -372,7 +385,6 @@
               { type: 'stars', target: 'party', values: levelValues([10, 12, 14, 16, 18, 20, 22, 24, 26, 30]) }
             ]
           }
-
         ],
         passives: [
           { name: '対魔力 B', icon: 'class-magic-resistance.png', effects: [{ type: 'debuffResist', value: 17.5 }] },
@@ -388,13 +400,19 @@
           target: 'allEnemies',
           hits: 5,
           multipliers: [300, 400, 450, 475, 500],
-          description: '自身のBuster性能をアップ(1T)し、敵全体に攻撃。〔天の力を持つ敵〕には150%特攻。自身のHPを1000減らす。',
-          before: [{ type: 'cardUp', target: 'self', card: 'buster', ocValues: [10, 20, 30, 40, 50], duration: 1 }],
+          description: `自身のBusterカード性能をアップ(1T)<OC:効果UP>
+＋敵全体に強力な攻撃[Lv]
+＆〔天の力を持つ敵〕特攻
+＋自身のHPを減少〖デメリット〗`,
+          before: [
+            { type: 'cardUp', target: 'self', card: 'buster', ocValues: [10, 20, 30, 40, 50], duration: 1 }
+          ],
           special: { kind: 'attribute', key: 'sky', multiplier: 1.5 },
-          after: [{ type: 'hpLoss', target: 'self', value: 1000, nonLethal: true }]
+          after: [
+            { type: 'hpLoss', target: 'self', value: 1000 }
+          ]
         },
-        source: 'https://w.atwiki.jp/siroi_human/pages/329.html',
-        maxLevel:90, levelStats:{max:{hp:12514,atk:13085},100:{hp:13690,atk:14315},120:{hp:16082,atk:16816}}
+        source: 'https://w.atwiki.jp/siroi_human/pages/329.html'
       },
       artoriaCaster: {
         id: 'artoriaCaster',
