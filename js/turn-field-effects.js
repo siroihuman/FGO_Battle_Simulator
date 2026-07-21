@@ -39,9 +39,9 @@
 
   const originalInitialize = proto._initialize;
   proto._initialize = function () {
-    const result = originalInitialize.apply(this, arguments);
+    // 初期Wave開始時効果からもフィールド条件を参照できるよう、元の初期化より先に設定する。
     this.state.fieldTraits = configuredFieldTraits(this, this.state.wave);
-    return result;
+    return originalInitialize.apply(this, arguments);
   };
 
   proto.getFieldTraits = function () {
@@ -80,8 +80,12 @@
 
   const originalStartNextWave = proto._startNextWave;
   proto._startNextWave = function () {
+    const previousTraits = this.getFieldTraits();
+    const nextWaveNumber = Number(this.state.wave || 1) + 1;
+    // Wave開始時効果から新Waveのフィールドを参照できるよう、元処理より先に切り替える。
+    this.state.fieldTraits = configuredFieldTraits(this, nextWaveNumber);
     const started = originalStartNextWave.apply(this, arguments);
-    if (started) this.setFieldTraits(configuredFieldTraits(this, this.state.wave), { log: false });
+    if (!started) this.state.fieldTraits = previousTraits;
     return started;
   };
 
