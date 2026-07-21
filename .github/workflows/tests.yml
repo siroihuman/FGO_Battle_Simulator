@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   test:
@@ -16,13 +16,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Apply servant No.050 migration
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+        run: node scripts/apply-juana-mad-queen-fix.js
       - name: Syntax check
         run: |
-          find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+          find js tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run all regression tests
         run: |
           set -e
@@ -30,3 +36,11 @@ jobs:
             echo "=== $file ==="
             node "$file"
           done
+      - name: Commit verified servant No.050 data
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/servants.js
+          git commit -m "Fix servant No.050 data"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
