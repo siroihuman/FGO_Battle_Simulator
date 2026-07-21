@@ -4,6 +4,7 @@ const assert = require('assert');
 const DATA = require('../js/data.js');
 const { BattleEngine } = require('../js/engine.js');
 require('../js/common-effects.js');
+require('../js/common-effects-extra-attack.js');
 
 function baseEnemy(overrides = {}) {
   return {
@@ -42,6 +43,10 @@ function test(name, callback) {
     console.error(`✗ ${name}`);
     throw error;
   }
+}
+
+function charmCount(unit) {
+  return unit.statuses.filter((status) => status.type === 'charm').length;
 }
 
 test('八百屋お七の基本データを登録', () => {
@@ -92,19 +97,39 @@ test('S2は攻撃力20%・通常攻撃時魅了50%・魅了成功率50%を付与
   assert.strictEqual(trigger.remaining, 3);
 });
 
-test('S2の通常攻撃時魅了は成功率補正を含めて発動', () => {
+test('S2の通常攻撃時魅了はQ/A/B/Extraで発動し宝具では発動しない', () => {
   const engine = makeEngine();
   const ally = engine.getState().allies[0];
   const enemy = engine.getState().enemies[0];
   engine.useSkill(ally.id, 1, ally.id);
   engine.rng = () => 0.99;
+
+  ['quick', 'arts', 'buster'].forEach((card) => {
+    engine._runEffectHooks('afterNormalAttack', {
+      actor: ally,
+      target: enemy,
+      action: { type: 'card', card }
+    });
+  });
   engine._runEffectHooks('afterNormalAttack', {
     actor: ally,
     target: enemy,
-    action: { type: 'card', card: 'quick' }
+    action: { type: 'extra', card: 'extra' }
   });
-  assert.ok(enemy.statuses.some((status) => status.type === 'charm'));
+
+  assert.strictEqual(charmCount(enemy), 4);
+  assert.strictEqual(
+    engine.getState().logs.filter((entry) => entry.message.includes('魅了付与判定')).length,
+    4
+  );
   assert.ok(engine.getState().logs.at(-1).message.includes('補正後100%'));
+
+  engine._runEffectHooks('afterNormalAttack', {
+    actor: ally,
+    target: enemy,
+    action: { type: 'np', card: 'quick' }
+  });
+  assert.strictEqual(charmCount(enemy), 4);
 });
 
 test('S3は1T回避・Quick20%・スター発生率50%を付与', () => {
