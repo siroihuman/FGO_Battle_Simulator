@@ -17,7 +17,7 @@ function baseEnemy(overrides = {}) {
     deathRate: 20,
     instantDeathRate: 0,
     chargeMax: 9,
-    charge: 3,
+    startingCharge: 3,
     critRate: 0,
     npTarget: 'single',
     ...overrides
