@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.6.4',
+    version: '1.7.0',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
@@ -17,7 +17,8 @@
     },
     traitNames: {
       servant: 'サーヴァント', human: '人間', humanoid: '人型', divine: '神性',
-      beastForm: '魔獣型', wildBeast: '猛獣', giant: '超巨大', demonic: '魔性', king:'王', order:'秩序', threatHumanity:'人類の脅威', fictionalConcept:'虚構概念', check:'チェック', poison:'毒'
+      beastForm: '魔獣型', wildBeast: '猛獣', giant: '超巨大', demonic: '魔性', king:'王', order:'秩序', threatHumanity:'人類の脅威',
+      fictionalConcept:'虚構概念', check:'チェック', checkmate:'チェックメイト', redChessPiece:'赤のチェスピース', wonderlandResident:'不思議の国の住人', poison:'毒'
     },
     statusIcons: {
       attackUp: 'Attackup.webp',
@@ -60,6 +61,11 @@
       burn: 'Poison.webp',
       curse: 'Poison.webp',
       dotAmplify: 'Statusup.webp',
+      temporaryTrait: 'Statusup.webp',
+      beforeAttackApplyTemporaryTrait: 'Buffatk.webp',
+      triggerEffect: 'Statusup.webp',
+      delayedEffect: 'Statusup.webp',
+      aura: 'Statusup.webp',
       onNormalAttackApplyDebuff: 'Buffatk.webp',
       addTrait: 'Statusup.webp',
       onAttackAddTrait: 'Buffatk.webp'
