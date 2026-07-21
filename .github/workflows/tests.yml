@@ -32,7 +32,29 @@ jobs:
       - name: Run common feature tests
         run: node tests/class-affinity-special-effects-tests.js
       - name: Run target data tests
-        run: node tests/juana-mad-queen-tests.js
+        shell: bash
+        run: |
+          set +e
+          node tests/juana-mad-queen-tests.js > target-test.log 2>&1
+          status=$?
+          cat target-test.log
+          echo "$status" > /tmp/target-test-status
+          exit 0
+      - name: Record target failure
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
+        run: |
+          status=$(cat /tmp/target-test-status)
+          if [ "$status" -ne 0 ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -f target-test.log
+            git commit -m "Record target test failure"
+            git push origin HEAD:${{ github.event.pull_request.head.ref }}
+          fi
+      - name: Stop on target failure
+        run: |
+          status=$(cat /tmp/target-test-status)
+          if [ "$status" -ne 0 ]; then exit "$status"; fi
       - name: Run all regression tests
         run: |
           set -e
@@ -45,6 +67,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -f --ignore-unmatch target-test.log
           git add js/servants.js
           git commit -m "Update servant data"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
