@@ -1,6 +1,23 @@
-=== Migration ===
+=== Servant migration ===
 Updated artoriaCaster definition only.
 migration_status=0
+=== Common test isolation ===
+/home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/scripts/fix-defense-test-isolation.js:10
+  throw new Error(`Expected one default Artoria test-party entry, found ${occurrences}.`);
+  ^
+
+Error: Expected one default Artoria test-party entry, found 2.
+    at Object.<anonymous> (/home/runner/work/FGO_Battle_Simulator/FGO_Battle_Simulator/scripts/fix-defense-test-isolation.js:10:9)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10)
+    at Module.load (node:internal/modules/cjs/loader:1505:32)
+    at Function._load (node:internal/modules/cjs/loader:1309:12)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+    at node:internal/main/run_main_module:36:49
+
+Node.js v22.23.1
+isolation_status=1
 === Syntax check ===
 syntax_status=0
 === Regression tests ===
