@@ -1,0 +1,45 @@
+name: Apply Artoria Caster Fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-artoria-caster-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply servant migration
+        run: node scripts/apply-artoria-caster-fix.js
+      - name: Syntax check
+        run: find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run all regression tests
+        run: |
+          set -e
+          for file in tests/*-tests.js; do
+            echo "=== $file ==="
+            node "$file"
+          done
+      - name: Commit servant data and cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/servants.js
+          git rm scripts/apply-artoria-caster-fix.js .github/workflows/apply-artoria-caster-fix.yml
+          git commit -m "Fix Artoria Caster servant data"
+          git push
