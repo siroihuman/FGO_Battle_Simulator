@@ -67,10 +67,13 @@ test('隠神刑部の基本データを登録', () => {
 test('クラススキルはArts8%・弱体成功率8%・与ダメージ200・スター発生率6%', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 8);
-  assert.strictEqual(engine._statusTotal(actor, 'debuffSuccess'), 8);
-  assert.strictEqual(engine._statusTotal(actor, 'damagePlus'), 200);
-  assert.strictEqual(engine._statusTotal(actor, 'starRateUp'), 6);
+  const passiveValue = (source, type, card) => actor.statuses
+    .filter((status) => status.source === source && status.type === type && (!card || status.card === card))
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  assert.strictEqual(passiveValue('陣地作成 B', 'cardUp', 'arts'), 8);
+  assert.strictEqual(passiveValue('道具作成 B', 'debuffSuccess'), 8);
+  assert.strictEqual(passiveValue('神格 C', 'damagePlus'), 200);
+  assert.strictEqual(passiveValue('神格 C', 'starRateUp'), 6);
 });
 
 test('S1は自身へ合計NP30・味方へNP10を付与', () => {
@@ -87,21 +90,28 @@ test('S2は味方全体へ攻撃力20%・Arts20%を付与', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
   const ally = engine.getState().allies[1];
+  const before = {
+    actorAttack: engine._statusTotal(actor, 'attackUp'),
+    allyAttack: engine._statusTotal(ally, 'attackUp'),
+    actorArts: engine._statusTotal(actor, 'cardUp', { card: 'arts' }),
+    allyArts: engine._statusTotal(ally, 'cardUp', { card: 'arts' })
+  };
   const result = engine.useSkill(actor.id, 1, actor.id);
   assert.strictEqual(result.ok, true);
-  assert.strictEqual(engine._statusTotal(actor, 'attackUp'), 20);
-  assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 20);
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 28);
-  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), 20);
+  assert.strictEqual(engine._statusTotal(actor, 'attackUp') - before.actorAttack, 20);
+  assert.strictEqual(engine._statusTotal(ally, 'attackUp') - before.allyAttack, 20);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }) - before.actorArts, 20);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }) - before.allyArts, 20);
 });
 
 test('強化後S3は自身Arts20%・選択した味方へNP獲得量20%とNP10を付与', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
   const ally = engine.getState().allies[1];
+  const artsBefore = engine._statusTotal(actor, 'cardUp', { card: 'arts' });
   const result = engine.useSkill(actor.id, 2, ally.id);
   assert.strictEqual(result.ok, true);
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 28);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }) - artsBefore, 20);
   assert.strictEqual(engine._statusTotal(ally, 'npGainUp'), 20);
   assert.strictEqual(ally.np, 10);
   assert.strictEqual(actor.np, 0);
@@ -117,14 +127,20 @@ test('宝具は攻撃前に味方全体へ攻撃力OC依存・Arts10%を付与',
   assert.deepStrictEqual(np.before.map((effect) => effect.type), ['attackUp', 'cardUp']);
   assert.deepStrictEqual(np.before[0].ocValues, [10, 15, 20, 25, 30]);
 
+  const before = {
+    actorAttack: engine._statusTotal(actor, 'attackUp'),
+    allyAttack: engine._statusTotal(ally, 'attackUp'),
+    actorArts: engine._statusTotal(actor, 'cardUp', { card: 'arts' }),
+    allyArts: engine._statusTotal(ally, 'cardUp', { card: 'arts' })
+  };
   np.before.forEach((effect) => {
     engine._applyEffect(effect, actor, actor.id, { oc: 5, level: 10 });
   });
 
-  assert.strictEqual(engine._statusTotal(actor, 'attackUp'), 30);
-  assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 30);
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 18);
-  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), 10);
+  assert.strictEqual(engine._statusTotal(actor, 'attackUp') - before.actorAttack, 30);
+  assert.strictEqual(engine._statusTotal(ally, 'attackUp') - before.allyAttack, 30);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }) - before.actorArts, 10);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }) - before.allyArts, 10);
 });
 
 console.log('\n隠神刑部の全テストに合格しました。');

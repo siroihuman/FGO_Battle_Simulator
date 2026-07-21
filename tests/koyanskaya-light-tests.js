@@ -112,26 +112,36 @@ test('S3はBuster限定の性能・クリ威力・スター集中度を付与', 
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
   const ally = engine.getState().allies[1];
+  const before = {
+    buster: engine._statusTotal(ally, 'cardUp', { card: 'buster' }),
+    busterCrit: engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }),
+    busterWeight: engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }),
+    arts: engine._statusTotal(ally, 'cardUp', { card: 'arts' })
+  };
   const result = engine.useSkill(actor.id, 2, ally.id);
 
   assert.strictEqual(result.ok, true);
-  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 50);
-  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }), 50);
-  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }), 5000);
-  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), 0);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }) - before.buster, 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }) - before.busterCrit, 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }) - before.busterWeight, 5000);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), before.arts);
 });
 
 test('クラススキル5種の効果量が正しい', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
 
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'quick' }), 8);
-  assert.strictEqual(engine._statusTotal(actor, 'critUp'), 18);
-  assert.strictEqual(engine._statusTotal(actor, 'deathResist'), 6);
-  assert.strictEqual(engine._statusTotal(actor, 'mentalResist'), 6);
-  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 10);
-  assert.strictEqual(engine._statusTotal(actor, 'starRateUp'), 10);
-  assert.strictEqual(engine._statusTotal(actor, 'npPowerUp'), 20);
+  const passiveValue = (source, type, card) => actor.statuses
+    .filter((status) => status.source === source && status.type === type && (!card || status.card === card))
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  assert.strictEqual(passiveValue('騎乗 B', 'cardUp', 'quick'), 8);
+  assert.strictEqual(passiveValue('単独行動 EX', 'critUp'), 12);
+  assert.strictEqual(passiveValue('単独顕現 C', 'critUp'), 6);
+  assert.strictEqual(passiveValue('単独顕現 C', 'deathResist'), 6);
+  assert.strictEqual(passiveValue('単独顕現 C', 'mentalResist'), 6);
+  assert.strictEqual(passiveValue('変化 A', 'cardUp', 'arts'), 10);
+  assert.strictEqual(passiveValue('変化 A', 'starRateUp'), 10);
+  assert.strictEqual(passiveValue('女神変生（銃） B', 'npPowerUp'), 20);
 });
 
 test('宝具の攻撃前・攻撃後効果が資料通り', () => {
