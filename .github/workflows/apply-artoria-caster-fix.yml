@@ -1,4 +1,4 @@
-name: Apply Artoria Caster Fix
+name: Apply Artoria Caster Fix Final
 
 on:
   push:
@@ -62,12 +62,10 @@ jobs:
           status=$(cat /tmp/artoria-status)
           if [ "$status" -eq 0 ]; then
             git add js/servants.js tests/artoria-caster-tests.js tests/defense-resistance-effects-tests.js
-            git rm scripts/apply-artoria-caster-fix.js scripts/fix-defense-test-isolation.js .github/workflows/apply-artoria-caster-fix.yml artoria-caster-verification.log
+            git rm scripts/apply-artoria-caster-fix.js scripts/fix-defense-test-isolation.js .github/workflows/apply-artoria-caster-fix.yml artoria-caster-verification.log artoria-caster-fix-trigger.txt
             git commit -m "Fix Artoria Caster servant data"
           else
             git add artoria-caster-verification.log
             git commit -m "Record Artoria Caster verification failure"
           fi
           git push origin main
-
-# Merge-triggered verification after generic test isolation.
