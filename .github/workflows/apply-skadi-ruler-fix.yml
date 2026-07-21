@@ -1,4 +1,4 @@
-name: Verify Skadi Ruler Fix
+name: Diagnose Skadi Ruler Fix
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  verify:
+  diagnose:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,19 +23,41 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check
-        run: find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Run all regression tests
+      - name: Run syntax and regression diagnostics
+        id: verify
+        shell: bash
         run: |
-          set -e
-          for file in tests/*-tests.js; do
-            echo "=== $file ==="
-            node "$file"
-          done
-      - name: Remove temporary migration tooling
+          set +e
+          {
+            echo '=== Syntax check ==='
+            find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+            syntax_status=$?
+            echo "syntax_status=$syntax_status"
+            echo '=== Regression tests ==='
+            test_status=0
+            for file in tests/*-tests.js; do
+              echo "=== $file ==="
+              node "$file" || test_status=$?
+            done
+            echo "test_status=$test_status"
+            if [ "$syntax_status" -eq 0 ] && [ "$test_status" -eq 0 ]; then
+              echo 'verification_status=success'
+              exit_code=0
+            else
+              echo 'verification_status=failure'
+              exit_code=1
+            fi
+          } 2>&1 | tee skadi-ruler-verification.log
+          status=${PIPESTATUS[0]}
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          exit 0
+      - name: Commit diagnostic log
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm scripts/apply-skadi-ruler-fix.js .github/workflows/apply-skadi-ruler-fix.yml
-          git commit -m "Remove temporary Skadi Ruler migration tooling"
+          git add skadi-ruler-verification.log
+          git commit -m "Record Skadi Ruler verification result"
           git push
+      - name: Fail when verification failed
+        if: steps.verify.outputs.status != '0'
+        run: exit 1
