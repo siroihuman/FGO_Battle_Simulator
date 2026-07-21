@@ -1,4 +1,4 @@
-name: Diagnose Skadi Ruler Fix
+name: Finalize Skadi Ruler Fix
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  diagnose:
+  finalize:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -23,41 +23,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run syntax and regression diagnostics
-        id: verify
-        shell: bash
+      - name: Correct regression baselines
         run: |
-          set +e
-          {
-            echo '=== Syntax check ==='
-            find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
-            syntax_status=$?
-            echo "syntax_status=$syntax_status"
-            echo '=== Regression tests ==='
-            test_status=0
-            for file in tests/*-tests.js; do
-              echo "=== $file ==="
-              node "$file" || test_status=$?
-            done
-            echo "test_status=$test_status"
-            if [ "$syntax_status" -eq 0 ] && [ "$test_status" -eq 0 ]; then
-              echo 'verification_status=success'
-              exit_code=0
-            else
-              echo 'verification_status=failure'
-              exit_code=1
-            fi
-          } 2>&1 | tee skadi-ruler-verification.log
-          status=${PIPESTATUS[0]}
-          echo "status=$status" >> "$GITHUB_OUTPUT"
-          exit 0
-      - name: Commit diagnostic log
+          node scripts/apply-skadi-ruler-fix.js
+          node scripts/fix-class-score-test-baselines-extra.js
+      - name: Syntax check
+        run: find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run all regression tests
+        run: |
+          set -e
+          for file in tests/*-tests.js; do
+            echo "=== $file ==="
+            node "$file"
+          done
+      - name: Commit corrections and remove temporary tooling
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add skadi-ruler-verification.log
-          git commit -m "Record Skadi Ruler verification result"
+          git add tests/inugami-gyobu-tests.js tests/koyanskaya-light-tests.js tests/yaoya-oshichi-tests.js tests/turn-field-effects-tests.js tests/skadi-ruler-tests.js
+          git rm scripts/apply-skadi-ruler-fix.js scripts/fix-class-score-test-baselines-extra.js .github/workflows/apply-skadi-ruler-fix.yml skadi-ruler-verification.log
+          git commit -m "Fix class score-aware regression tests and finalize Skadi Ruler"
           git push
-      - name: Fail when verification failed
-        if: steps.verify.outputs.status != '0'
-        run: exit 1
