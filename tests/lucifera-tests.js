@@ -111,12 +111,16 @@ test('強化後S1は全体Buster30%・攻撃20%と選択対象への宝具換装
   engine.rng = () => 0.5;
   const [lucifera, koyanskaya, oshichi] = engine.getState().allies;
   oshichi.cooldowns = oshichi.cooldowns.map(() => 5);
+  const before = new Map([lucifera, koyanskaya, oshichi].map((ally) => [ally.id, {
+    buster: engine._statusTotal(ally, 'cardUp', { card: 'buster' }),
+    attack: engine._statusTotal(ally, 'attackUp')
+  }]));
 
   const result = engine.useSkill(lucifera.id, 0, oshichi.id);
   assert.strictEqual(result.ok, true);
   [lucifera, koyanskaya, oshichi].forEach((ally) => {
-    assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 30);
-    assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 20);
+    assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }) - before.get(ally.id).buster, 30);
+    assert.strictEqual(engine._statusTotal(ally, 'attackUp') - before.get(ally.id).attack, 20);
   });
   assert.strictEqual(engine.getBaseNpCard(oshichi), 'quick');
   assert.strictEqual(engine.getEffectiveNpCard(oshichi), 'buster');
