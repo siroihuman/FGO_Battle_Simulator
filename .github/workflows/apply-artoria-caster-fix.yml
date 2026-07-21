@@ -1,10 +1,9 @@
 name: Apply Artoria Caster Fix
 
 on:
-  push:
+  pull_request_target:
+    types: [opened]
     branches: [main]
-    paths:
-      - '.github/workflows/apply-artoria-caster-fix.yml'
   workflow_dispatch:
 
 permissions:
@@ -16,9 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,7 +39,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add js/servants.js
+          git add js/servants.js tests/artoria-caster-tests.js
           git rm scripts/apply-artoria-caster-fix.js .github/workflows/apply-artoria-caster-fix.yml
           git commit -m "Fix Artoria Caster servant data"
-          git push
+          git push origin main
