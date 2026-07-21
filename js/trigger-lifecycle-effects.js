@@ -22,6 +22,12 @@
     (status.remaining == null || status.remaining < 0 || status.remaining > 0) &&
     (status.uses == null || status.uses > 0);
   const TARGET_CONDITION_KINDS = new Set(['targetHasTrait', 'targetHasStatus']);
+  const DEFERRED_CONDITION_TYPES = new Set([
+    'triggerEffect',
+    'beforeAttackApplyTemporaryTrait',
+    'delayedEffect',
+    'aura'
+  ]);
 
   function conditionNeedsTarget(condition) {
     if (!condition) return false;
@@ -33,13 +39,36 @@
     return false;
   }
 
-  // 効果対象がまだ確定していない外側の共通条件判定では、対象依存条件を保留する。
-  // 候補対象ごとの絞り込み時に、実際のtargetを渡して最終判定する。
+  function isDeferredActivationCondition(condition, detail) {
+    const effect = detail && detail.effect;
+    return Boolean(
+      effect &&
+      DEFERRED_CONDITION_TYPES.has(effect.type) &&
+      effect.condition &&
+      condition === effect.condition
+    );
+  }
+
+  // triggerEffect・auraなどのconditionは、状態を付与する時点ではなく、
+  // イベント発火時または能力値参照時に評価する。
+  // 通常効果の対象依存条件は、候補対象が確定するまで保留する。
   const originalConditionMet = proto._conditionMet;
   proto._conditionMet = function (condition, context) {
     const detail = context || {};
+    if (isDeferredActivationCondition(condition, detail)) return true;
     if (!detail.target && conditionNeedsTarget(condition)) return true;
     return originalConditionMet.call(this, condition, detail);
+  };
+
+  // 遅延評価型状態のconditionを、状態付与先のフィルタとして使用しない。
+  // 状態の付与先を絞る場合はtargetConditionを明示する。
+  const originalEffectTargets = proto._effectTargets;
+  proto._effectTargets = function (effect, source, selectedTargetId) {
+    if (!effect || !DEFERRED_CONDITION_TYPES.has(effect.type) || !effect.condition) {
+      return originalEffectTargets.call(this, effect, source, selectedTargetId);
+    }
+    const applicationEffect = { ...effect, condition: undefined };
+    return originalEffectTargets.call(this, applicationEffect, source, selectedTargetId);
   };
 
   const originalRunTriggerEffect = proto._runTriggerEffect;
@@ -94,6 +123,11 @@
   const API = {
     delayedEvents: ['turnStart', 'turnEnd'],
     targetDependentConditions: Array.from(TARGET_CONDITION_KINDS),
+    deferredConditionTypes: Array.from(DEFERRED_CONDITION_TYPES),
+    conditionSemantics: {
+      condition: '遅延評価型状態では発動時に評価する',
+      targetCondition: '状態を付与する対象ごとに評価する'
+    },
     timing: {
       turnStart: '状態減少とターン更新後に発動',
       turnEnd: '状態減少前のターン終了時に発動'
