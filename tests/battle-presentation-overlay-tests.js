@@ -45,18 +45,18 @@ test('同一Wave継続時は現在Waveだけを表示する', () => {
   assert.strictEqual(OVERLAY.waveLabel({ wave: 2 }, { wave: 2 }, 3), 'WAVE 2/3');
 });
 
-test('次Waveへ置換された旧敵はHP0をアニメーション目標にする', () => {
+test('敵IDが次Waveで再利用されても旧敵はHP0をアニメーション目標にする', () => {
   const before = PRESENTATION.snapshot({
     wave: 1,
     allies: [unit('ally', 'ally')],
-    enemies: [unit('wave1Enemy', 'enemy')]
+    enemies: [unit('enemy-1', 'enemy')]
   });
   const after = PRESENTATION.snapshot({
     wave: 2,
     allies: [unit('ally', 'ally')],
-    enemies: [unit('wave2Enemy', 'enemy')]
+    enemies: [unit('enemy-1', 'enemy')]
   });
-  const target = OVERLAY.animationTarget(before.units.get('wave1Enemy'), after);
+  const target = OVERLAY.animationTarget(before.units.get('enemy-1'), after);
   assert.strictEqual(target.hp, 0);
   assert.strictEqual(target.alive, false);
 });
