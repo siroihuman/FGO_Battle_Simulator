@@ -46,7 +46,7 @@
     let activeOverlay = null;
     let restoreBodyOverflow = '';
 
-    const escapeHtml = (value) => String(value == null ? '' : value).replace(/[&<>\"']/g, (character) => ({
+    const escapeHtml = (value) => String(value == null ? '' : value).replace(/[&<>"']/g, (character) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[character]);
     const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value) || 0));
@@ -122,7 +122,9 @@
       activeOverlay.focus({ preventScroll: true });
 
       let pointerStarted = false;
-      activeOverlay.addEventListener('pointerdown', () => { pointerStarted = true; });
+      activeOverlay.addEventListener('pointerdown', () => {
+        pointerStarted = activeOverlay.classList.contains('ready');
+      });
       activeOverlay.addEventListener('pointerup', (event) => {
         if (!pointerStarted) return;
         pointerStarted = false;
