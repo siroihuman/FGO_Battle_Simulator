@@ -19,7 +19,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - name: Insert Lucifera data and correct S3 test setup
+      - name: Insert Lucifera data and update regression fixtures
         shell: bash
         run: |
           python - <<'PY'
@@ -32,13 +32,25 @@ jobs:
           code = '\n'.join(line[10:] if line.startswith('          ') else line for line in block.splitlines())
           exec(compile(code, 'embedded-lucifera-implementation.py', 'exec'))
 
-          test_path = Path('tests/lucifera-tests.js')
-          test_text = test_path.read_text(encoding='utf-8')
-          old = "  lucifera.cooldowns = lucifera.cooldowns.map(() => 5);"
-          new = "  lucifera.cooldowns = [5, 5, 0];"
-          if old not in test_text:
+          lucifera_test = Path('tests/lucifera-tests.js')
+          lucifera_text = lucifera_test.read_text(encoding='utf-8')
+          old_cooldown = "  lucifera.cooldowns = lucifera.cooldowns.map(() => 5);"
+          new_cooldown = "  lucifera.cooldowns = [5, 5, 0];"
+          if old_cooldown not in lucifera_text:
               raise SystemExit('Lucifera S3 cooldown setup not found')
-          test_path.write_text(test_text.replace(old, new, 1), encoding='utf-8')
+          lucifera_test.write_text(lucifera_text.replace(old_cooldown, new_cooldown, 1), encoding='utf-8')
+
+          engine_test = Path('tests/engine-tests.js')
+          engine_text = engine_test.read_text(encoding='utf-8')
+          old_registry = """test('実装サーヴァントは9騎', () => {
+  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
+});"""
+          new_registry = """test('実装サーヴァントは10騎', () => {
+  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'lucifera', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
+});"""
+          if old_registry not in engine_text:
+              raise SystemExit('Servant registry regression block not found')
+          engine_test.write_text(engine_text.replace(old_registry, new_registry, 1), encoding='utf-8')
           PY
 
       - name: Check all JavaScript syntax
@@ -87,7 +99,7 @@ jobs:
           git rm .github/workflows/diagnose-lucifera.yml
           git rm .github/workflows/finalize-lucifera.yml
           git rm .lucifera-workflow-trigger
-          git add js/servants.js tests/lucifera-tests.js
+          git add js/servants.js tests/lucifera-tests.js tests/engine-tests.js
           git commit -m 'Implement Lucifera servant data'
           git push origin HEAD:${{ github.head_ref }}
 
