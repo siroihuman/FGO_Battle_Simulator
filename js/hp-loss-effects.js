@@ -49,10 +49,14 @@
     }
 
     const anyAllyAlive = this.state.allies.some(isAlive);
-    if (!anyAllyAlive && !this.state.winner) {
-      this.state.winner = 'enemies';
-      this.state.phase = 'finished';
-      this._log('敗北。', 'defeat');
+    if (!anyAllyAlive) {
+      // 最終Waveの敵撃破と同時に自滅した場合も、後続の勝利処理で上書きされないよう記録する。
+      this.state._fatalHpLossDefeat = true;
+      if (this.state.winner !== 'enemies') {
+        this.state.winner = 'enemies';
+        this.state.phase = 'finished';
+        this._log('敗北。', 'defeat');
+      }
     }
 
     return {
@@ -142,11 +146,32 @@
     return originalPerformEnemyTurn.apply(this, arguments);
   };
 
+  // 最終敵を倒した宝具のデメリットで最後の味方も倒れた場合は、敗北を優先する。
+  const originalExecuteCommandChain = proto.executeCommandChain;
+  proto.executeCommandChain = function () {
+    const result = originalExecuteCommandChain.apply(this, arguments);
+    if (!this.state._fatalHpLossDefeat) return result;
+
+    this.state.winner = 'enemies';
+    this.state.phase = 'finished';
+    this.state.logs = (this.state.logs || []).filter((entry) => entry.kind !== 'victory');
+    if (!this.state.logs.some((entry) => entry.message === '敗北。')) {
+      this._log('敗北。', 'defeat');
+    }
+    return {
+      ...(result && typeof result === 'object' ? result : {}),
+      ok: result && result.ok === false ? false : true,
+      finished: true,
+      winner: 'enemies'
+    };
+  };
+
   const API = {
     modes: {
       nonLethal: 'HP1で停止し、ガッツ・戦闘不能判定を行わない',
       lethal: 'HP0到達時に既存のガッツ・戦闘不能・敗北処理へ接続する'
     },
+    defeatPriority: '最後の味方が致死性HP減少で倒れた場合は、同時に最終敵を倒していても敗北を維持する',
     resolveValue
   };
 
