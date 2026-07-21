@@ -17,6 +17,13 @@ replaceExactlyOnce(
 );
 
 replaceExactlyOnce(
+  'tests/trait-trigger-aura-effects-tests.js',
+  "      { servantId: 'aliceLiddell', skillLevel: 10, npLevel: 1 },",
+  "      { servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1 },",
+  'trait trigger neutral provider'
+);
+
+replaceExactlyOnce(
   'tests/trigger-lifecycle-effects-tests.js',
   "    party: [{ servantId: 'aliceLiddell', skillLevel: 10, npLevel: 1 }],",
   "    party: [{ servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1 }],",
