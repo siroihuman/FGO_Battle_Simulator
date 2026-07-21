@@ -23,38 +23,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply data migration
+      - name: Apply data migrations
         if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: node scripts/apply-juana-mad-queen-fix.js
+        run: |
+          node scripts/apply-juana-mad-queen-fix.js
+          node scripts/fix-target-test-baseline.js
       - name: Syntax check
         run: |
           find js tests scripts -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run common feature tests
         run: node tests/class-affinity-special-effects-tests.js
       - name: Run target data tests
-        shell: bash
-        run: |
-          set +e
-          node tests/juana-mad-queen-tests.js > target-test.log 2>&1
-          status=$?
-          cat target-test.log
-          echo "$status" > /tmp/target-test-status
-          exit 0
-      - name: Record target failure
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          status=$(cat /tmp/target-test-status)
-          if [ "$status" -ne 0 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -f target-test.log
-            git commit -m "Record target test failure"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
-      - name: Stop on target failure
-        run: |
-          status=$(cat /tmp/target-test-status)
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
+        run: node tests/juana-mad-queen-tests.js
       - name: Run all regression tests
         run: |
           set -e
@@ -68,6 +48,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -f --ignore-unmatch target-test.log
-          git add js/servants.js
-          git commit -m "Update servant data"
+          git add js/servants.js tests/juana-mad-queen-tests.js
+          git commit -m "Update servant data and tests"
           git push origin HEAD:${{ github.event.pull_request.head.ref }}
