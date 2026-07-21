@@ -216,10 +216,16 @@
         name: '光のコヤンスカヤ',
         classId: 'assassin',
         rarity: 5,
+        maxLevel: 90,
         maxHp: 13081,
         atk: 11616,
+        levelStats: {
+          max: { hp: 13081, atk: 11616 },
+          100: { hp: 14333, atk: 12728 },
+          120: { hp: 16851, atk: 14964 }
+        },
         attribute: 'beast',
-        traits: ['servant', 'humanoid', 'divine', 'demonic', 'beastForm'],
+        traits: ['サーヴァント', '人型', '女性', '秩序', '悪', '獣の力', 'アサシン', '神性', '騎乗', '魔性', '魔獣型', '霊衣を持つ者', 'バニー系', 'ケモノ科'],
         cards: ['quick', 'quick', 'arts', 'buster', 'buster'],
         hits: { quick: 4, arts: 4, buster: 3, extra: 5, np: 8 },
         na: 0.76,
@@ -238,7 +244,9 @@
             name: 'イノベイター・バニー A',
             baseCt: 10,
             target: 'ally',
-            description: '味方単体のNPを増やし、スキルチャージを2進める。味方全体のHPを1000減らす。',
+            description: `味方単体のNPを増やす[Lv]
+＆スキルチャージを2進める
+＋味方全体のHPを1000減らす【デメリット】`,
             effects: [
               { type: 'npCharge', target: 'selectedAlly', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]) },
               { type: 'cooldownReduce', target: 'selectedAlly', value: 2 },
@@ -250,9 +258,12 @@
             name: '殺戮技巧（人） A',
             baseCt: 8,
             target: 'ally',
-            description: '味方単体に〔人間〕特攻、〔人の力を持つ敵〕特攻、Buster通常攻撃時NP増加を付与し、スターを獲得する。',
+            description: `味方単体に〔人間〕特攻状態を付与[Lv](3T)
+＆〔人の力を持つ敵〕特攻状態を付与[Lv](3T)
+＆「Buster通常攻撃時に自身のNPを増やす状態」を付与[Lv](3T)
+＋スターを獲得[Lv]`,
             effects: [
-              { type: 'traitPowerUp', target: 'selectedAlly', trait: 'human', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
+              { type: 'traitPowerUp', target: 'selectedAlly', trait: '人間', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
               { type: 'attributePowerUp', target: 'selectedAlly', attribute: 'man', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
               { type: 'busterNormalNp', target: 'selectedAlly', values: levelValues([5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 10]), duration: 3 },
               { type: 'stars', target: 'party', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]) }
@@ -263,7 +274,9 @@
             name: 'ＮＦＦスペシャル A',
             baseCt: 8,
             target: 'ally',
-            description: '味方単体のBuster性能、Busterクリティカル威力、Busterスター集中度をアップする。',
+            description: `味方単体のBusterカード性能をアップ[Lv](3T)
+＆Busterカードのクリティカル威力をアップ[Lv](3T)
+＆Busterカードのスター集中度をアップ[Lv](3T)`,
             effects: [
               { type: 'cardUp', target: 'selectedAlly', card: 'buster', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
               { type: 'cardCritUp', target: 'selectedAlly', card: 'buster', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },
@@ -286,15 +299,17 @@
           target: 'allEnemies',
           hits: 8,
           multipliers: [300, 400, 450, 475, 500],
-          description: '自身の攻撃力をアップ(1T)し、敵全体に攻撃。チャージを1減らし、味方全体のNPを増やす。',
+          description: `自身の攻撃力をアップ(1T)
+＋敵全体に強力な攻撃[Lv]
+＆チャージを減らす
+＋味方全体のNPを少し増やす<OC:効果UP>`,
           before: [{ type: 'attackUp', target: 'self', value: 20, duration: 1 }],
           after: [
             { type: 'enemyChargeDown', target: 'allEnemies', value: 1 },
             { type: 'npCharge', target: 'allAllies', ocValues: [10, 15, 20, 25, 30] }
           ]
         },
-        source: 'https://w.atwiki.jp/f_go/pages/5141.html',
-        maxLevel:90, levelStats:{max:{hp:13081,atk:11616},100:{hp:14333,atk:12728},120:{hp:16851,atk:14964}}
+        source: 'https://w.atwiki.jp/f_go/pages/5141.html'
       },
 
       fenrir: {
