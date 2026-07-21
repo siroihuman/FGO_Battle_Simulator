@@ -29,7 +29,7 @@ function makeEngine(options = {}) {
   return new BattleEngine({
     seed: 314058,
     party: options.party || [
-      { servantId: 'artoriaCaster', skillLevel: 10, npLevel: 1, startingNp: 100 }
+      { servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1, startingNp: 100 }
     ],
     enemies: [baseEnemy(options.enemy)]
   });
