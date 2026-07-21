@@ -1,14 +1,236 @@
 'use strict';
 
 const fs = require('fs');
-const servantsPath = 'js/servants.js';
-const source = fs.readFileSync(servantsPath, 'utf8');
-const replacement = "      skadiRuler: {\n        id: 'skadiRuler',\n        no: '357',\n        name: 'スカサハ＝スカディ〔ルーラー〕',\n        classId: 'ruler',\n        rarity: 5,\n        maxLevel: 90,\n        maxHp: 14850,\n        atk: 10868,\n        levelStats: {\n          max: { hp: 14850, atk: 10868 },\n          100: { hp: 16261, atk: 11898 },\n          120: { hp: 19101, atk: 13976 }\n        },\n        attribute: 'sky',\n        traits: ['サーヴァント', '人型', '女性', '混沌', '夏', '天の力', 'ルーラー', '神性', '王', '霊衣を持つ者', '神霊', '豚化無効', '夏モード'],\n        cards: ['quick', 'quick', 'arts', 'buster', 'buster'],\n        hits: { quick: 4, arts: 3, buster: 4, extra: 5, np: 6 },\n        na: 0.78,\n        nd: 3.00,\n        starRate: 9.8,\n        starWeight: 102,\n        deathRate: 17.5,\n        skillIcons: [\n          'skill-quick-up.png',\n          'skill-attack-up.png',\n          'skill-np-charge.png'\n        ],\n        skills: [\n          {\n            id: 'primordialRuneMidsummer',\n            name: '原初のルーン（盛夏） A',\n            baseCt: 8,\n            target: 'ally',\n            description: `味方単体のQuickカード性能をアップ[Lv](3T)\n＆Busterカードのクリティカル威力をアップ[Lv](3T)`,\n            effects: [\n              { type: 'cardUp', target: 'selectedAlly', card: 'quick', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]), duration: 3 },\n              { type: 'cardCritUp', target: 'selectedAlly', card: 'buster', values: levelValues([50, 55, 60, 65, 70, 75, 80, 85, 90, 100]), duration: 3 }\n            ]\n          },\n          {\n            id: 'midsummerIce',\n            name: '真夏のアイス C',\n            baseCt: 9,\n            target: 'self',\n            description: `味方全体の攻撃力をアップ[Lv](3T)\n＆Quickカード性能をアップ[Lv](3T)\n＆Busterカード性能をアップ[Lv](3T)\n＋自身に毎ターンスター獲得状態を付与[Lv](3T)`,\n            effects: [\n              { type: 'attackUp', target: 'allAllies', values: levelValues([10, 11, 12, 13, 14, 15, 16, 17, 18, 20]), duration: 3 },\n              { type: 'cardUp', target: 'allAllies', card: 'quick', values: levelValues([10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 15]), duration: 3 },\n              { type: 'cardUp', target: 'allAllies', card: 'buster', values: levelValues([10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 15]), duration: 3 },\n              { type: 'starsPerTurn', target: 'self', values: levelValues([5, 6, 7, 8, 9, 10, 11, 12, 13, 15]), duration: 3 }\n            ]\n          },\n          {\n            id: 'summerNightReflection',\n            name: '夏の夜更けに我想う A+',\n            baseCt: 9,\n            target: 'ally',\n            description: `味方単体のNPを増やす[Lv]\n＆Busterカードのスター集中度をアップ[Lv](1T)\n＋スターを獲得[Lv]`,\n            effects: [\n              { type: 'npCharge', target: 'selectedAlly', values: levelValues([30, 32, 34, 36, 38, 40, 42, 44, 46, 50]) },\n              { type: 'cardStarWeightUp', target: 'selectedAlly', card: 'buster', values: levelValues([3000, 3200, 3400, 3600, 3800, 4000, 4200, 4400, 4600, 5000]), duration: 1 },\n              { type: 'stars', target: 'party', values: levelValues([5, 6, 7, 8, 9, 10, 11, 12, 13, 15]) }\n            ]\n          }\n        ],\n        passives: [\n          { name: '対魔力 EX', icon: 'class-magic-resistance.png', effects: [{ type: 'debuffResist', value: 25 }] },\n          { name: '陣地作成 A', icon: 'class-territory-creation.png', effects: [{ type: 'cardUp', card: 'arts', value: 10 }] },\n          { name: '女神の神核 A', icon: 'class-divinity.png', effects: [{ type: 'damagePlus', value: 250 }, { type: 'debuffResist', value: 25 }] }\n        ],\n        np: {\n          id: 'aegirGate',\n          name: '命溢るる大海への門',\n          reading: 'ゲート・オブ・エーギル',\n          card: 'quick',\n          target: 'allEnemies',\n          hits: 6,\n          multipliers: [600, 800, 900, 950, 1000],\n          description: `自身に〔水辺〕のあるフィールドにおいてのみ、宝具威力をアップ(1T)<OC:効果UP>\n＋敵全体に強力な攻撃[Lv]\n＆〔秩序〕特攻<OC:特攻威力アップ>\n＆チャージを減らす`,\n          before: [\n            {\n              type: 'npPowerUp',\n              target: 'self',\n              ocValues: [10, 15, 20, 25, 30],\n              duration: 1,\n              condition: { kind: 'fieldTrait', key: '水辺' }\n            }\n          ],\n          special: { kind: 'trait', key: '秩序', ocMultipliers: [1.5, 1.625, 1.75, 1.875, 2] },\n          after: [\n            { type: 'enemyChargeDown', target: 'allEnemies', value: 1 }\n          ]\n        },\n        source: 'https://w.atwiki.jp/f_go/pages/5698.html'\n      },";
-const pattern = /      skadiRuler:\{.*?source:'https:\/\/w\.atwiki\.jp\/f_go\/pages\/5698\.html'\},/s;
-if (!pattern.test(source)) {
-  throw new Error('Existing skadiRuler definition was not found or already changed.');
+
+function replaceExact(path, from, to) {
+  const source = fs.readFileSync(path, 'utf8');
+  if (!source.includes(from)) throw new Error(`Expected test fragment not found: ${path}`);
+  const updated = source.replace(from, to);
+  fs.writeFileSync(path, updated, 'utf8');
 }
-const updated = source.replace(pattern, replacement);
-if (updated === source) throw new Error('skadiRuler definition was not replaced.');
-fs.writeFileSync(servantsPath, updated, 'utf8');
-console.log('Updated js/servants.js for Skadi Ruler.');
+
+replaceExact(
+  'tests/inugami-gyobu-tests.js',
+  `  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 8);
+  assert.strictEqual(engine._statusTotal(actor, 'debuffSuccess'), 8);
+  assert.strictEqual(engine._statusTotal(actor, 'damagePlus'), 200);
+  assert.strictEqual(engine._statusTotal(actor, 'starRateUp'), 6);`,
+  `  const passiveValue = (source, type, card) => actor.statuses
+    .filter((status) => status.source === source && status.type === type && (!card || status.card === card))
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  assert.strictEqual(passiveValue('陣地作成 B', 'cardUp', 'arts'), 8);
+  assert.strictEqual(passiveValue('道具作成 B', 'debuffSuccess'), 8);
+  assert.strictEqual(passiveValue('神格 C', 'damagePlus'), 200);
+  assert.strictEqual(passiveValue('神格 C', 'starRateUp'), 6);`
+);
+
+replaceExact(
+  'tests/koyanskaya-light-tests.js',
+  `  const result = engine.useSkill(actor.id, 2, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }), 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }), 5000);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), 0);`,
+  `  const before = {
+    buster: engine._statusTotal(ally, 'cardUp', { card: 'buster' }),
+    busterCrit: engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }),
+    busterWeight: engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }),
+    arts: engine._statusTotal(ally, 'cardUp', { card: 'arts' })
+  };
+  const result = engine.useSkill(actor.id, 2, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }) - before.buster, 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }) - before.busterCrit, 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }) - before.busterWeight, 5000);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'arts' }), before.arts);`
+);
+
+replaceExact(
+  'tests/koyanskaya-light-tests.js',
+  `  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'quick' }), 8);
+  assert.strictEqual(engine._statusTotal(actor, 'critUp'), 18);
+  assert.strictEqual(engine._statusTotal(actor, 'deathResist'), 6);
+  assert.strictEqual(engine._statusTotal(actor, 'mentalResist'), 6);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 10);
+  assert.strictEqual(engine._statusTotal(actor, 'starRateUp'), 10);
+  assert.strictEqual(engine._statusTotal(actor, 'npPowerUp'), 20);`,
+  `  const passiveValue = (source, type, card) => actor.statuses
+    .filter((status) => status.source === source && status.type === type && (!card || status.card === card))
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  assert.strictEqual(passiveValue('騎乗 B', 'cardUp', 'quick'), 8);
+  assert.strictEqual(passiveValue('単独行動 EX', 'critUp'), 12);
+  assert.strictEqual(passiveValue('単独顕現 C', 'critUp'), 6);
+  assert.strictEqual(passiveValue('単独顕現 C', 'deathResist'), 6);
+  assert.strictEqual(passiveValue('単独顕現 C', 'mentalResist'), 6);
+  assert.strictEqual(passiveValue('変化 A', 'cardUp', 'arts'), 10);
+  assert.strictEqual(passiveValue('変化 A', 'starRateUp'), 10);
+  assert.strictEqual(passiveValue('女神変生（銃） B', 'npPowerUp'), 20);`
+);
+
+replaceExact(
+  'tests/yaoya-oshichi-tests.js',
+  `  const result = engine.useSkill(ally.id, 0, ally.id);
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }), 20);`,
+  `  const quickBefore = engine._statusTotal(ally, 'cardUp', { card: 'quick' });
+  const result = engine.useSkill(ally.id, 0, ally.id);
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }) - quickBefore, 20);`
+);
+
+replaceExact(
+  'tests/turn-field-effects-tests.js',
+  `    const ally = engine.getState().allies[0];
+    const result = engine._applyEffect({`,
+  `    const ally = engine.getState().allies[0];
+    const before = engine._statusTotal(ally, 'npPowerUp');
+    const result = engine._applyEffect({`
+);
+replaceExact(
+  'tests/turn-field-effects-tests.js',
+  `    assert.notStrictEqual(result && result.applied, false);
+    assert.strictEqual(engine._statusTotal(ally, 'npPowerUp'), value);`,
+  `    assert.notStrictEqual(result && result.applied, false);
+    assert.strictEqual(engine._statusTotal(ally, 'npPowerUp') - before, value);`
+);
+replaceExact(
+  'tests/turn-field-effects-tests.js',
+  `  const ally = engine.getState().allies[0];
+  const result = engine._applyEffect({
+    type: 'npPowerUp',`,
+  `  const ally = engine.getState().allies[0];
+  const before = engine._statusTotal(ally, 'npPowerUp');
+  const result = engine._applyEffect({
+    type: 'npPowerUp',`
+);
+replaceExact(
+  'tests/turn-field-effects-tests.js',
+  `  assert.strictEqual(result.applied, false);
+  assert.strictEqual(engine._statusTotal(ally, 'npPowerUp'), 0);`,
+  `  assert.strictEqual(result.applied, false);
+  assert.strictEqual(engine._statusTotal(ally, 'npPowerUp'), before);`
+);
+replaceExact(
+  'tests/turn-field-effects-tests.js',
+  `  assert.strictEqual(withoutField.engine._statusTotal(withoutField.actor, 'npPowerUp'), 0);
+  assert.strictEqual(withField.engine._statusTotal(withField.actor, 'npPowerUp'), 30);`,
+  `  const withoutBase = withoutField.actor.statuses
+    .filter((status) => status.type === 'npPowerUp' && status.source !== withoutField.actor.name)
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  const withBase = withField.actor.statuses
+    .filter((status) => status.type === 'npPowerUp' && status.source !== withField.actor.name)
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+  assert.strictEqual(withoutField.engine._statusTotal(withoutField.actor, 'npPowerUp'), withoutBase);
+  assert.strictEqual(withField.engine._statusTotal(withField.actor, 'npPowerUp') - withBase, 30);`
+);
+
+replaceExact(
+  'tests/skadi-ruler-tests.js',
+  `  const result = engine.useSkill(actor.id, 0, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }), 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }), 100);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'quick' }), 0);`,
+  `  const quickBefore = engine._statusTotal(ally, 'cardUp', { card: 'quick' });
+  const busterCritBefore = engine._statusTotal(ally, 'cardCritUp', { card: 'buster' });
+  const quickCritBefore = engine._statusTotal(ally, 'cardCritUp', { card: 'quick' });
+  const result = engine.useSkill(actor.id, 0, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }) - quickBefore, 50);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }) - busterCritBefore, 100);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'quick' }), quickCritBefore);`
+);
+
+replaceExact(
+  'tests/skadi-ruler-tests.js',
+  `  const result = engine.useSkill(actor.id, 1, actor.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(actor, 'attackUp'), 20);
+  assert.strictEqual(engine._statusTotal(ally, 'attackUp'), 20);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'quick' }), 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }), 15);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'buster' }), 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }), 15);`,
+  `  const before = {
+    actorAttack: engine._statusTotal(actor, 'attackUp'),
+    allyAttack: engine._statusTotal(ally, 'attackUp'),
+    actorQuick: engine._statusTotal(actor, 'cardUp', { card: 'quick' }),
+    allyQuick: engine._statusTotal(ally, 'cardUp', { card: 'quick' }),
+    actorBuster: engine._statusTotal(actor, 'cardUp', { card: 'buster' }),
+    allyBuster: engine._statusTotal(ally, 'cardUp', { card: 'buster' })
+  };
+  const result = engine.useSkill(actor.id, 1, actor.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(engine._statusTotal(actor, 'attackUp') - before.actorAttack, 20);
+  assert.strictEqual(engine._statusTotal(ally, 'attackUp') - before.allyAttack, 20);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'quick' }) - before.actorQuick, 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'quick' }) - before.allyQuick, 15);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'buster' }) - before.actorBuster, 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardUp', { card: 'buster' }) - before.allyBuster, 15);`
+);
+
+replaceExact(
+  'tests/skadi-ruler-tests.js',
+  `  const result = engine.useSkill(actor.id, 2, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(ally.np, 50);
+  assert.strictEqual(engine.getState().stars, 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }), 5000);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }), 0);`,
+  `  const starWeightBefore = engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' });
+  const busterCritBefore = engine._statusTotal(ally, 'cardCritUp', { card: 'buster' });
+  const result = engine.useSkill(actor.id, 2, ally.id);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(ally.np, 50);
+  assert.strictEqual(engine.getState().stars, 15);
+  assert.strictEqual(engine._statusTotal(ally, 'cardStarWeightUp', { card: 'buster' }) - starWeightBefore, 5000);
+  assert.strictEqual(engine._statusTotal(ally, 'cardCritUp', { card: 'buster' }), busterCritBefore);`
+);
+
+replaceExact(
+  'tests/skadi-ruler-tests.js',
+  `  assert.strictEqual(engine._statusTotal(actor, 'debuffResist'), 50);
+  assert.strictEqual(engine._statusTotal(actor, 'cardUp', { card: 'arts' }), 10);
+  assert.strictEqual(engine._statusTotal(actor, 'damagePlus'), 250);`,
+  `  const passiveValue = (source, type, card) => actor.statuses
+    .filter((status) => status.source === source && status.type === type && (!card || status.card === card))
+    .reduce((sum, status) => sum + Number(status.value || 0), 0);
+
+  assert.strictEqual(passiveValue('対魔力 EX', 'debuffResist'), 25);
+  assert.strictEqual(passiveValue('陣地作成 A', 'cardUp', 'arts'), 10);
+  assert.strictEqual(passiveValue('女神の神核 A', 'damagePlus'), 250);
+  assert.strictEqual(passiveValue('女神の神核 A', 'debuffResist'), 25);`
+);
+
+replaceExact(
+  'tests/skadi-ruler-tests.js',
+  `  const dryActor = dryEngine.getState().allies[0];
+  dryEngine._applyEffect(dryActor.data.np.before[0], dryActor, dryActor.id, { oc: 5, level: 10 });
+  assert.strictEqual(dryEngine._statusTotal(dryActor, 'npPowerUp'), 0);
+
+  const waterEngine = makeEngine({ fieldTraits: ['水辺'] });
+  const waterActor = waterEngine.getState().allies[0];
+  waterEngine._applyEffect(waterActor.data.np.before[0], waterActor, waterActor.id, { oc: 5, level: 10 });
+  assert.strictEqual(waterEngine._statusTotal(waterActor, 'npPowerUp'), 30);`,
+  `  const dryActor = dryEngine.getState().allies[0];
+  const dryBefore = dryEngine._statusTotal(dryActor, 'npPowerUp');
+  dryEngine._applyEffect(dryActor.data.np.before[0], dryActor, dryActor.id, { oc: 5, level: 10 });
+  assert.strictEqual(dryEngine._statusTotal(dryActor, 'npPowerUp'), dryBefore);
+
+  const waterEngine = makeEngine({ fieldTraits: ['水辺'] });
+  const waterActor = waterEngine.getState().allies[0];
+  const waterBefore = waterEngine._statusTotal(waterActor, 'npPowerUp');
+  waterEngine._applyEffect(waterActor.data.np.before[0], waterActor, waterActor.id, { oc: 5, level: 10 });
+  assert.strictEqual(waterEngine._statusTotal(waterActor, 'npPowerUp') - waterBefore, 30);`
+);
+
+console.log('Updated regression tests to account for class score baselines.');
