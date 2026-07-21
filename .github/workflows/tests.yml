@@ -17,58 +17,72 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply and verify Skadi Caster
-        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
-        shell: bash
+      - name: Apply Skadi Caster migration
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
-          set +e
-          : > skadi-caster-verification.log
-          echo '=== Migration ===' >> skadi-caster-verification.log
-          node scripts/apply-skadi-caster-fix.js >> skadi-caster-verification.log 2>&1
-          status=$?
-          echo "migration_status=$status" >> skadi-caster-verification.log
-
-          echo '=== Common test isolation ===' >> skadi-caster-verification.log
-          node scripts/fix-combat-defense-test-isolation.js >> skadi-caster-verification.log 2>&1
-          isolation_status=$?
-          echo "isolation_status=$isolation_status" >> skadi-caster-verification.log
-          if [ "$isolation_status" -ne 0 ]; then status=1; fi
-
-          echo '=== Syntax check ===' >> skadi-caster-verification.log
-          find js tests -name '*.js' -print0 | xargs -0 -n1 node --check >> skadi-caster-verification.log 2>&1
-          syntax_status=$?
-          echo "syntax_status=$syntax_status" >> skadi-caster-verification.log
-          if [ "$syntax_status" -ne 0 ]; then status=1; fi
-
-          echo '=== Regression tests ===' >> skadi-caster-verification.log
+          node scripts/apply-skadi-caster-fix.js
+          node scripts/fix-combat-defense-test-isolation.js
+      - name: Syntax check
+        run: |
+          find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run all regression tests
+        run: |
+          set -e
           for file in tests/*-tests.js; do
-            echo "=== $file ===" >> skadi-caster-verification.log
-            node "$file" >> skadi-caster-verification.log 2>&1
-            test_status=$?
-            if [ "$test_status" -ne 0 ]; then status=1; fi
+            echo "=== $file ==="
+            node "$file"
           done
-          echo "verification_status=$status" >> skadi-caster-verification.log
-          echo "$status" > /tmp/skadi-caster-status
-      - name: Commit result
-        if: github.ref == 'refs/heads/main' && github.actor != 'github-actions[bot]'
+      - name: Commit verified Skadi Caster changes to PR
+        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          status=$(cat /tmp/skadi-caster-status)
-          if [ "$status" -eq 0 ]; then
-            git show dde29044c922ff86dcee60d4a89db5de1107ccb4:.github/workflows/tests.yml > .github/workflows/tests.yml
-            git rm scripts/apply-skadi-caster-fix.js scripts/fix-combat-defense-test-isolation.js skadi-caster-verification.log
-            git add js/servants.js tests/skadi-caster-tests.js tests/combat-defense-effects-tests.js .github/workflows/tests.yml
-            git commit -m "Fix Skadi Caster servant data"
-          else
-            git add skadi-caster-verification.log
-            git commit -m "Record Skadi Caster verification failure"
-          fi
-          git push origin main
+          cat > .github/workflows/tests.yml <<'EOF'
+          name: JavaScript Tests
 
-# Verification rerun after isolating limited crit status lookup.
+          on:
+            push:
+              branches: ['**']
+            pull_request:
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            test:
+              runs-on: ubuntu-latest
+              timeout-minutes: 5
+              steps:
+                - name: Checkout
+                  uses: actions/checkout@v4
+                - name: Setup Node.js
+                  uses: actions/setup-node@v4
+                  with:
+                    node-version: '22'
+                - name: Syntax check
+                  run: |
+                    find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+                - name: Run all regression tests
+                  run: |
+                    set -e
+                    for file in tests/*-tests.js; do
+                      echo "=== $file ==="
+                      node "$file"
+                    done
+          EOF
+          sed -i 's/^          //' .github/workflows/tests.yml
+          git rm -f --ignore-unmatch \
+            scripts/apply-skadi-caster-fix.js \
+            scripts/fix-combat-defense-test-isolation.js \
+            skadi-caster-verification.log \
+            skadi-caster-fix-trigger.txt
+          git add js/servants.js tests/skadi-caster-tests.js tests/combat-defense-effects-tests.js .github/workflows/tests.yml
+          git commit -m "Fix Skadi Caster servant data"
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
