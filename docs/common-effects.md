@@ -1,6 +1,8 @@
 # 共通状態・トリガー効果
 
-このファイルに記載した効果は`js/common-effects.js`、`js/common-effects-extra-attack.js`、`js/card-buff-effects.js`、`js/defense-resistance-effects.js`および`js/turn-field-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
+このファイルに記載した効果は`js/common-effects.js`、`js/common-effects-extra-attack.js`、`js/card-buff-effects.js`、`js/defense-resistance-effects.js`、`js/combat-defense-effects.js`および`js/turn-field-effects.js`で共通処理されます。サーヴァント名や内部IDによる分岐は不要です。
+
+ダメージ計算上の効果配置は、FGO @wiki「サーヴァント/隠しステータス」のダメージ計算式を基準とします。
 
 ## 通常攻撃時に確率で弱体付与
 
@@ -189,6 +191,96 @@ before: [
 - `critRateDown`は敵側へ付与する弱体、`critRateResist`は攻撃を受ける対象側が持つ耐性として別々に管理します。
 - 宝具にはクリティカル判定を行わないため、`critRateResist`も宝具ダメージには影響しません。
 
+## 防御力ダウン
+
+```js
+{
+  type: 'defenseDown',
+  target: 'allEnemies',
+  values: [20, 21, 22, 23, 24, 25, 26, 27, 28, 30],
+  duration: 3,
+  debuff: true
+}
+```
+
+`defenseDown`は被攻撃側に付与する正式な弱体状態です。通常攻撃・宝具・敵攻撃の攻撃力／防御力枠へ、次の形で統合します。
+
+```text
+1 + attackUp - defenseUp + defenseDown
+```
+
+- 複数の`defenseDown`は加算します。
+- `debuff: true`および`chance`を指定した場合、弱体付与成功率と弱体耐性の共通判定を使用します。
+- `defenseUp`とは別状態・別表示です。
+- 旧データの`defenseUp`負数も従来どおり計算されます。`defenseUp: -30`と`defenseDown: 30`は同じ増加方向になります。
+
+## 回数制クリティカル威力アップ
+
+既存の`critUp`へ`uses`を記述すると、回数制クリティカル威力アップとして扱います。
+
+```js
+{
+  type: 'critUp',
+  target: 'allAllies',
+  npLevelValues: [50, 75, 87.5, 93.8, 100],
+  uses: 3,
+  duration: 5
+}
+```
+
+- 実際にクリティカルになったQuick／Arts／Buster通常カード1枚につき1回消費します。
+- 効果量は消費前のクリティカル攻撃へ適用し、カード全Hitの解決後に消費します。
+- 多段Hitでもカード1枚につき1回だけ消費します。
+- 非クリティカル、Extra Attack、宝具では消費しません。
+- 同時に複数の回数制`critUp`が適用されている場合、各状態をそれぞれ1回消費します。
+- `uses`を省略した回数無制限の`critUp`は消費しません。
+- 残り回数が0になった時点で即座に解除します。
+
+## 即死無効
+
+```js
+{
+  type: 'instantDeathImmune',
+  target: 'allAllies',
+  uses: 1,
+  duration: 3
+}
+```
+
+- 即死成功率の計算より前に判定し、有効な状態があれば即死効果を必ず無効化します。
+- 即死効果1回につき1回だけ消費します。攻撃Hit数では重複消費しません。
+- 即死効果を持たない攻撃では消費しません。
+- `uses`を省略した場合は回数無制限です。
+- 残り回数0で即時解除し、残りターン0でも解除します。
+- 無効化時は残り回数を戦闘ログへ記録します。
+- `deathResist`は成功率を減少させる状態、`instantDeathImmune`は成功率計算そのものを行わず無効化する状態です。
+
+## ダメージカット
+
+```js
+{
+  type: 'damageCut',
+  target: 'allAllies',
+  ocValues: [500, 750, 1000, 1250, 1500],
+  duration: 3
+}
+```
+
+ダメージカットは、FGOの固定ダメージ枠に合わせて敵から味方への最終ダメージから減算します。
+
+```text
+max(0, 最終ダメージ - damageCutの合計)
+```
+
+- 通常攻撃、クリティカル攻撃、宝具へ適用します。
+- 現在の敵攻撃処理では、攻撃アクション1回につき対象ごとに1回減算します。
+- 複数の`damageCut`は加算します。
+- 最終ダメージは0未満になりません。
+- 回避、無敵、対粛正防御で攻撃を防いだ場合はダメージ計算へ進まないため、軽減ログも回数消費も発生しません。
+- `uses`を省略した状態はターン制として扱い、攻撃では消費しません。
+- `uses`を指定した場合は、実際にダメージを軽減した攻撃アクションで各状態を1回消費します。
+- `ocValues`を使用するとOC1～5に応じた固定値を設定できます。
+
 ## 毎ターンスター獲得
 
 ```js
@@ -298,4 +390,4 @@ Extra Attack全Hit解決後
 
 `starsPerTurn`は`turnEnd`で状態の残りターンを減らす前に処理されます。
 
-弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の選択・消費は`_selectDefenseStatus`と`_consumeDefenseStatus`、フィールド条件は`_conditionMet`、敵クリティカル率は`_enemyCriticalChance`で共通化されています。
+弱体成功判定は`_debuffSuccessChance`と`_tryApplyDebuff`、防御状態の選択・消費は`_selectDefenseStatus`と`_consumeDefenseStatus`、フィールド条件は`_conditionMet`、敵クリティカル率は`_enemyCriticalChance`、防御力ダウン・回数制クリティカル威力・即死無効・ダメージカットは`js/combat-defense-effects.js`で共通化されています。
