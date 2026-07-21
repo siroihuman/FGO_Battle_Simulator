@@ -24,6 +24,37 @@ replaceExactlyOnce(
 );
 
 replaceExactlyOnce(
+  'tests/trait-trigger-aura-effects-tests.js',
+  `  const provider = engine.getState().allies[0];
+  const reserve = engine.getState().allies[3];
+  addStatus(engine, provider, {
+    type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
+  }, -15);
+  addStatus(engine, provider, {
+    type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
+  }, -15);
+  assert.strictEqual(engine._statusTotal(provider, 'debuffResist'), 0);
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), -30);
+  provider.frontline = false;
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), 0);`,
+  `  const provider = engine.getState().allies[0];
+  const reserve = engine.getState().allies[3];
+  const providerBase = engine._statusTotal(provider, 'debuffResist');
+  const reserveBase = engine._statusTotal(reserve, 'debuffResist');
+  addStatus(engine, provider, {
+    type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
+  }, -15);
+  addStatus(engine, provider, {
+    type: 'aura', modifierType: 'debuffResist', target: 'allOtherAlliesIncludingReserve', value: -15
+  }, -15);
+  assert.strictEqual(engine._statusTotal(provider, 'debuffResist'), providerBase);
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), reserveBase - 30);
+  provider.frontline = false;
+  assert.strictEqual(engine._statusTotal(reserve, 'debuffResist'), reserveBase);`,
+  'aura resistance passive baseline'
+);
+
+replaceExactlyOnce(
   'tests/trigger-lifecycle-effects-tests.js',
   "    party: [{ servantId: 'aliceLiddell', skillLevel: 10, npLevel: 1 }],",
   "    party: [{ servantId: 'yaoyaOshichi', skillLevel: 10, npLevel: 1 }],",
