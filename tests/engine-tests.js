@@ -37,8 +37,8 @@ function test(name, callback) {
   }
 }
 
-test('実装サーヴァントは7騎', () => {
-  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'juanaMadQueen', 'koyanskayaLight', 'skadiCaster', 'skadiRuler']);
+test('実装サーヴァントは8騎', () => {
+  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'fenrir', 'juanaMadQueen', 'koyanskayaLight', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
 });
 
 test('各サーヴァントの保有スキルは3つ', () => {
