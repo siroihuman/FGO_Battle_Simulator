@@ -57,6 +57,13 @@
       return originalApplyEffect.call(this, resolvedEffect, source, selectedTargetId, context);
     }
 
+    // このランタイムがフィールド条件ランタイムより後から読み込まれた場合も、
+    // 条件不成立時は既存の共通条件処理へ委譲する。
+    if (resolvedEffect.condition && typeof this._conditionMet === 'function' &&
+        !this._conditionMet(resolvedEffect.condition, { effect: resolvedEffect, source, selectedTargetId, context: detail })) {
+      return originalApplyEffect.call(this, resolvedEffect, source, selectedTargetId, context);
+    }
+
     const targets = this._effectTargets(resolvedEffect, source, selectedTargetId);
     const results = targets.map((target) => {
       const existing = (target.statuses || []).find((status) =>
@@ -65,6 +72,9 @@
       if (existing) {
         this._log(`${target.name}には対粛正防御が残っているため、再付与しなかった。`, 'defense');
         return { applied: false, reason: 'alreadyActive', target, status: existing };
+      }
+      if (resolvedUses != null && resolvedUses <= 0) {
+        return { applied: false, reason: 'noUses', target };
       }
 
       const status = this._addStatus(
@@ -83,16 +93,30 @@
     };
   };
 
-  const originalCanAvoid = proto._canAvoid;
   proto._canAvoid = function (ally, enemy, isNp) {
     this._lastDefenseStatus = null;
-    const antiEnforcement = this._selectDefenseStatus(ally, 'antiEnforcementDefense');
-    if (antiEnforcement) {
-      this._lastDefenseStatus = antiEnforcement;
-      this._consumeDefenseStatus(ally, antiEnforcement);
+
+    // 対粛正防御は必中・無敵貫通を無視し、他の防御状態より先に消費する。
+    let status = this._selectDefenseStatus(ally, 'antiEnforcementDefense');
+    if (status) {
+      this._lastDefenseStatus = status;
+      this._consumeDefenseStatus(ally, status);
       return true;
     }
-    return originalCanAvoid.call(this, ally, enemy, isNp);
+
+    // 無敵貫通時は通常の無敵・回避をどちらも使用しない。
+    if (this._hasStatus(enemy, 'invinciblePierce')) return false;
+
+    // 通常防御の優先順位は無敵 > 回避。必中は回避だけを無視する。
+    status = this._selectDefenseStatus(ally, 'invincible');
+    if (!status && !this._hasStatus(enemy, 'sureHit')) {
+      status = this._selectDefenseStatus(ally, 'evade');
+    }
+    if (!status) return false;
+
+    this._lastDefenseStatus = status;
+    this._consumeDefenseStatus(ally, status);
+    return true;
   };
 
   proto._enemyCriticalChance = function (enemy, ally, isNp) {
