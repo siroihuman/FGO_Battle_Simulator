@@ -4,6 +4,7 @@ const assert = require('assert');
 const DATA = require('../js/data.js');
 const { BattleEngine } = require('../js/engine.js');
 const COMMON = require('../js/common-effects.js');
+require('../js/common-effects-extra-attack.js');
 
 function baseEnemy(overrides = {}) {
   return {
@@ -37,6 +38,31 @@ function addStatus(engine, unit, effect, source = '共通処理テスト') {
   return engine._addStatus(unit, effect, effect.value || 0, source);
 }
 
+function chainContext() {
+  return {
+    firstBonuses: { quick: false, arts: false, buster: false },
+    busterChain: false,
+    artsChain: false,
+    quickChain: false,
+    mighty: false
+  };
+}
+
+function addNormalAttackCharm(engine, actor, overrides = {}) {
+  return addStatus(engine, actor, {
+    type: 'onNormalAttackApplyDebuff',
+    debuffType: 'charm',
+    chance: 100,
+    debuffDuration: 2,
+    duration: 3,
+    ...overrides
+  });
+}
+
+function charmCount(target) {
+  return target.statuses.filter((status) => status.type === 'charm').length;
+}
+
 function test(name, callback) {
   try {
     callback();
@@ -50,22 +76,18 @@ function test(name, callback) {
 test('共通効果ランタイムが登録される', () => {
   assert.ok(COMMON.debuffTypes.includes('charm'));
   assert.ok(COMMON.dotTypes.includes('burn'));
+  assert.deepStrictEqual(COMMON.normalAttackTypes, ['quick', 'arts', 'buster', 'extra']);
+  assert.strictEqual(COMMON.extraAttackTriggersAfterNormalAttack, true);
   assert.strictEqual(typeof BattleEngine.prototype._runEffectHooks, 'function');
   assert.strictEqual(typeof BattleEngine.prototype._debuffSuccessChance, 'function');
   assert.strictEqual(typeof BattleEngine.prototype._consumeDefenseStatus, 'function');
 });
 
-test('通常Q/A/B攻撃だけが攻撃時魅了判定を発生させる', () => {
+test('Q/A/BとExtra Attackは各1回発動し、宝具では発動しない', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
   const target = engine.getState().enemies[0];
-  addStatus(engine, actor, {
-    type: 'onNormalAttackApplyDebuff',
-    debuffType: 'charm',
-    chance: 100,
-    debuffDuration: 1,
-    duration: 3
-  });
+  addNormalAttackCharm(engine, actor);
   engine.rng = () => 0;
 
   ['quick', 'arts', 'buster'].forEach((card) => {
@@ -75,19 +97,70 @@ test('通常Q/A/B攻撃だけが攻撃時魅了判定を発生させる', () => 
       action: { type: 'card', card }
     });
   });
-  assert.strictEqual(target.statuses.filter((status) => status.type === 'charm').length, 3);
+  engine._runEffectHooks('afterNormalAttack', {
+    actor,
+    target,
+    action: { type: 'extra', card: 'extra' }
+  });
+  assert.strictEqual(charmCount(target), 4);
 
   engine._runEffectHooks('afterNormalAttack', {
     actor,
     target,
     action: { type: 'np', card: 'buster' }
   });
-  engine._runEffectHooks('afterNormalAttack', {
-    actor,
-    target,
-    action: { type: 'extra', card: 'extra' }
-  });
-  assert.strictEqual(target.statuses.filter((status) => status.type === 'charm').length, 3);
+  assert.strictEqual(charmCount(target), 4);
+});
+
+test('Extra AttackはHit数に関係なく攻撃1回につき1回だけ判定する', () => {
+  const engine = makeEngine(baseEnemy({ hp: 99999999 }));
+  const actor = engine.getState().allies[0];
+  const target = engine.getState().enemies[0];
+  actor.data.hits.extra = 10;
+  addNormalAttackCharm(engine, actor);
+  engine.rng = () => 0;
+
+  engine._executeExtra(actor.id, chainContext(), [
+    { actorId: actor.id, card: 'quick' },
+    { actorId: actor.id, card: 'arts' },
+    { actorId: actor.id, card: 'buster' }
+  ]);
+
+  assert.strictEqual(charmCount(target), 1);
+  const judgments = engine.getState().logs.filter((entry) => entry.message.includes('魅了付与判定'));
+  assert.strictEqual(judgments.length, 1);
+});
+
+test('通常カード3枚のBrave ChainではExtra Attackを含め合計4回判定する', () => {
+  const engine = makeEngine(baseEnemy({ hp: 99999999, attack: 1, chargeMax: 9 }));
+  const actor = engine.getState().allies[0];
+  const target = engine.getState().enemies[0];
+  addNormalAttackCharm(engine, actor);
+  engine.rng = () => 0;
+
+  const quick = engine.getState().hand.find((card) => card.card === 'quick');
+  const arts = engine.getState().hand.find((card) => card.card === 'arts');
+  const buster = engine.getState().hand.find((card) => card.card === 'buster');
+  assert.ok(quick && arts && buster);
+  [quick, arts, buster].forEach((card) => engine.toggleCard(card.id));
+
+  const result = engine.executeCommandChain();
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(charmCount(target), 4);
+  const judgments = engine.getState().logs.filter((entry) => entry.message.includes('魅了付与判定'));
+  assert.strictEqual(judgments.length, 4);
+});
+
+test('実際の宝具実行では通常攻撃時効果を発動しない', () => {
+  const engine = makeEngine(baseEnemy({ hp: 99999999 }));
+  const actor = engine.getState().allies[0];
+  const target = engine.getState().enemies[0];
+  actor.np = 100;
+  addNormalAttackCharm(engine, actor);
+  engine.rng = () => 0;
+
+  engine._executeNp({ type: 'np', actorId: actor.id, card: actor.data.np.card }, chainContext(), 0);
+  assert.strictEqual(charmCount(target), 0);
 });
 
 test('弱体成功率へ汎用成功率・魅了成功率・弱体耐性・精神異常耐性を反映する', () => {
