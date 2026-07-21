@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
@@ -16,48 +16,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          fetch-depth: 0
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Apply Alice Liddell and Issue 19 migrations
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          node scripts/apply-alice-liddell-fix.js
-          node scripts/fix-issue19-regression-tests.js
-          node scripts/fix-issue19-aura-target.js
       - name: Syntax check
         run: |
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Run Alice Liddell regression tests
-        run: node tests/alice-liddell-tests.js
-      - name: Run Issue 19 regression tests
-        shell: bash
-        run: |
-          set +e
-          node tests/trait-trigger-aura-effects-tests.js > issue19-aura-test.log 2>&1
-          status=$?
-          cat issue19-aura-test.log
-          echo "$status" > /tmp/issue19-aura-status
-          exit 0
-      - name: Record Issue 19 aura failure
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          status=$(cat /tmp/issue19-aura-status)
-          if [ "$status" -ne 0 ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -f issue19-aura-test.log
-            git commit -m "Record Issue 19 aura regression failure"
-            git push origin HEAD:${{ github.event.pull_request.head.ref }}
-          fi
-      - name: Stop on Issue 19 aura failure
-        run: |
-          status=$(cat /tmp/issue19-aura-status)
-          if [ "$status" -ne 0 ]; then exit "$status"; fi
       - name: Run all regression tests
         run: |
           set -e
@@ -65,12 +30,3 @@ jobs:
             echo "=== $file ==="
             node "$file"
           done
-      - name: Commit verified Alice Liddell implementation
-        if: github.event_name == 'pull_request' && github.actor != 'github-actions[bot]'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm -f --ignore-unmatch alice-integration-tests.log alice-postfix-tests.log issue19-aura-test.log
-          git add js/servants.js js/trait-trigger-aura-effects.js tests/trait-trigger-aura-effects-tests.js tests/trigger-lifecycle-effects-tests.js tests/turn-field-effects-tests.js
-          git commit -m "Implement Alice Liddell servant data"
-          git push origin HEAD:${{ github.event.pull_request.head.ref }}
