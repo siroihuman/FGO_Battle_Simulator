@@ -121,7 +121,9 @@ test('ターン終了時強化解除状態はDelayedDebuff.webpを使用する',
 
   assert.ok(status);
   assert.strictEqual(status.statusIcon, 'DelayedDebuff.webp');
-  const summary = engine.getStatusSummary(koyanskaya.id).find((entry) => entry === entry && entry.type === 'triggerEffect' && entry.remaining === 1);
+  const summary = engine.getStatusSummary(koyanskaya.id).find((entry) =>
+    entry.type === 'triggerEffect' && entry.source === lucifera.name && entry.remaining === 1
+  );
   assert.ok(summary);
   assert.strictEqual(summary.statusIcon, 'DelayedDebuff.webp');
 });
