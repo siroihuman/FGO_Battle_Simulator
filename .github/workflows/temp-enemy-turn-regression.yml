@@ -17,9 +17,26 @@ jobs:
         run: |
           node --check js/enemy-turn-charge-reserve-status.js
           node --check tests/enemy-turn-charge-reserve-status-tests.js
-      - name: Enemy charge and reserve duration tests
-        run: node tests/enemy-turn-charge-reserve-status-tests.js
-      - name: Existing enemy defaults tests
+      - name: Run regression tests and capture output
+        id: regression
+        shell: bash
         run: |
-          node tests/enemy-class-defaults-tests.js
-          node tests/enemy-action-defaults-tests.js
+          status=0
+          {
+            echo '=== enemy-turn-charge-reserve-status-tests ==='
+            node tests/enemy-turn-charge-reserve-status-tests.js || status=$?
+            echo '=== enemy-class-defaults-tests ==='
+            node tests/enemy-class-defaults-tests.js || status=$?
+            echo '=== enemy-action-defaults-tests ==='
+            node tests/enemy-action-defaults-tests.js || status=$?
+          } 2>&1 | tee enemy-turn-test-output.txt
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+      - name: Upload regression output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: enemy-turn-test-output
+          path: enemy-turn-test-output.txt
+      - name: Fail when regression tests failed
+        if: always()
+        run: test "${{ steps.regression.outputs.exit_code }}" = "0"
