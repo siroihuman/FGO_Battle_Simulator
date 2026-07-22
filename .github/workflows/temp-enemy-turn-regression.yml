@@ -17,26 +17,23 @@ jobs:
         run: |
           node --check js/enemy-turn-charge-reserve-status.js
           node --check tests/enemy-turn-charge-reserve-status-tests.js
-      - name: Run regression tests and capture output
+      - name: Run all regression tests and capture output
         id: regression
         shell: bash
         run: |
           status=0
-          {
-            echo '=== enemy-turn-charge-reserve-status-tests ==='
-            node tests/enemy-turn-charge-reserve-status-tests.js || status=$?
-            echo '=== enemy-class-defaults-tests ==='
-            node tests/enemy-class-defaults-tests.js || status=$?
-            echo '=== enemy-action-defaults-tests ==='
-            node tests/enemy-action-defaults-tests.js || status=$?
-          } 2>&1 | tee enemy-turn-test-output.txt
+          : > all-regression-output.txt
+          for file in tests/*-tests.js; do
+            echo "=== $file ===" | tee -a all-regression-output.txt
+            node "$file" 2>&1 | tee -a all-regression-output.txt || status=$?
+          done
           echo "exit_code=$status" >> "$GITHUB_OUTPUT"
       - name: Upload regression output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: enemy-turn-test-output
-          path: enemy-turn-test-output.txt
+          name: all-regression-output
+          path: all-regression-output.txt
       - name: Fail when regression tests failed
         if: always()
         run: test "${{ steps.regression.outputs.exit_code }}" = "0"
