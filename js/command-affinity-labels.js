@@ -1,13 +1,11 @@
 (function (global) {
   'use strict';
 
-  const DATA = global.FGO_SIM_DATA ||
-    (typeof require !== 'undefined' ? require('./data.js') : null);
-  const ENGINE = global.FGO_SIM_ENGINE ||
-    (typeof require !== 'undefined' ? require('./engine.js') : null);
+  const RULES = global.FGO_CLASS_AFFINITY_RULES ||
+    (typeof require !== 'undefined' ? require('./class-affinity-rules.js') : null);
 
-  if (!DATA || !ENGINE || typeof ENGINE.classAffinity !== 'function') {
-    throw new Error('command affinity labels require data and engine.');
+  if (!RULES || typeof RULES.resolveAttackClassAffinity !== 'function') {
+    throw new Error('command affinity labels require class affinity rules.');
   }
 
   function classifyAffinity(multiplier) {
@@ -17,17 +15,7 @@
     return '';
   }
 
-  function buildClassLabelMap(classNames) {
-    return new Map(
-      Object.entries(classNames || {}).map(([classId, label]) => [String(label), classId])
-    );
-  }
-
-  const API = {
-    classifyAffinity,
-    buildClassLabelMap
-  };
-
+  const API = { classifyAffinity };
   global.FGO_COMMAND_AFFINITY_LABELS = API;
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
 
@@ -35,29 +23,16 @@
 
   const root = document.getElementById('app');
   if (!root) return;
-
-  const classLabelMap = buildClassLabelMap(DATA.classNames);
   let scheduled = false;
 
-  function classIdFromCard(card) {
-    if (!card) return '';
-    const label = Array.from(card.children || [])
-      .map((element) => String(element.textContent || '').trim())
-      .find((text) => classLabelMap.has(text));
-    return label ? classLabelMap.get(label) : '';
+  function activeEngine() {
+    return global.FGO_ACTIVE_BATTLE_ENGINE || null;
   }
 
-  function selectedEnemyClassId() {
-    return classIdFromCard(root.querySelector('.enemy-card.selected-target'));
-  }
-
-  function allyClassId(unitId) {
-    const card = Array.from(root.querySelectorAll('.ally-card[data-unit-id]'))
-      .find((element) => element.dataset.unitId === unitId);
-    if (!card) return '';
-    const badge = card.querySelector('.class-badge');
-    const label = String(badge && badge.textContent || '').trim();
-    return classLabelMap.get(label) || '';
+  function selectedDefender(engine) {
+    if (!engine || !engine.state) return null;
+    return engine.getUnit(engine.state.selectedEnemyId) ||
+      (typeof engine.getAliveEnemies === 'function' ? engine.getAliveEnemies()[0] : null);
   }
 
   function applyBadge(button, affinityKind) {
@@ -86,16 +61,17 @@
 
   function updateAffinityLabels() {
     scheduled = false;
-    const targetClassId = selectedEnemyClassId();
+    const engine = activeEngine();
+    const defender = selectedDefender(engine);
     const buttons = root.querySelectorAll('.command-card[data-actor-id], .np-command[data-np]');
 
     buttons.forEach((button) => {
       const actorId = button.dataset.actorId || button.dataset.np || '';
-      const actorClassId = allyClassId(actorId);
-      const kind = actorClassId && targetClassId
-        ? classifyAffinity(ENGINE.classAffinity(actorClassId, targetClassId))
-        : '';
-      applyBadge(button, kind);
+      const actor = engine && typeof engine.getUnit === 'function' ? engine.getUnit(actorId) : null;
+      const multiplier = actor && defender
+        ? RULES.resolveAttackClassAffinity(engine, actor, defender)
+        : 1;
+      applyBadge(button, classifyAffinity(multiplier));
     });
   }
 
