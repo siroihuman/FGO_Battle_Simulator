@@ -50,10 +50,14 @@ jobs:
           });
           NODE
           node fetch.js
+      - name: Archive repository for audit
+        run: |
+          tar --exclude='.git' --exclude='.github/workflows/fetch-page-844.yml' -czf /tmp/repository-audit.tar.gz .
       - uses: actions/upload-artifact@v4
         with:
-          name: page-844
+          name: page-844-audit
           path: |
             /tmp/page844.html
             /tmp/page844.txt
             /tmp/page844.png
+            /tmp/repository-audit.tar.gz
