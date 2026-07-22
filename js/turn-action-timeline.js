@@ -162,10 +162,13 @@
       if (eventName === 'beforeEnemyAction' && activeRecorder(this)) {
         finalizeEnemyStep(this);
         const actor = context && context.actor;
+        const contextNp = context && typeof context.isNp === 'boolean' ? context.isNp : null;
         this.__turnActionRecorder.currentEnemy = {
           phase: 'enemy',
           kind: 'enemyAttack',
-          isNp: Boolean(actor && actor.charge >= actor.chargeMax),
+          isNp: contextNp == null
+            ? Boolean(actor && actor.chargeMax > 0 && actor.charge >= actor.chargeMax)
+            : contextNp,
           ...actorInfo(this, actor && actor.id),
           before: snapshot(this),
           prevented: false
