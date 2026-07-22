@@ -37,8 +37,8 @@ function test(name, callback) {
   }
 }
 
-test('実装サーヴァントは11騎', () => {
-  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'baphomet', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'lucifera', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
+test('実装サーヴァントは12騎', () => {
+  assert.deepStrictEqual(Object.keys(DATA.servants).sort(), ['aliceLiddell', 'artoriaCaster', 'baphomet', 'dominionForeigner', 'fenrir', 'inugamiGyobu', 'juanaMadQueen', 'koyanskayaLight', 'lucifera', 'skadiCaster', 'skadiRuler', 'yaoyaOshichi']);
 });
 
 test('各サーヴァントの保有スキルは3つ', () => {
@@ -175,4 +175,4 @@ test('通常の3枚選択から1ターンを完走できる', () => {
   assert.strictEqual(engine.getState().hand.length, 5);
 });
 
-console.log('\n全テストに合格しました。');
+console.log('\n全テストに合格しました.');

@@ -82,6 +82,7 @@
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = DATA;
     require('./servants.js');
+    require('./servants-dominion-foreigner.js');
     require('./craft-essences.js');
     require('./mystic-codes.js');
     require('./class-score.js');
