@@ -112,10 +112,9 @@
       case 'rlyeh':
         return unitHasTrait(engine, defender, 'ヒト科') || unitHasTrait(engine, defender, '今を生きる人類') ? 2 : 1;
       case 'firstMurder': {
-        const human = unitHasTrait(engine, defender, 'ヒト科');
-        const favorable = unitHasTrait(engine, defender, '人の力') || human;
+        const favorable = unitHasTrait(engine, defender, '人の力') || unitHasTrait(engine, defender, 'ヒト科');
         if (favorable) return 2;
-        const unfavorable = unitHasTrait(engine, defender, '天の力') || !human;
+        const unfavorable = unitHasTrait(engine, defender, '天の力') || unitHasTrait(engine, defender, 'ヒト科以外');
         return unfavorable ? 0.5 : 1;
       }
       case 'baphomet':
