@@ -36,23 +36,28 @@ test('等倍率ではラベルを表示しない', () => {
 test('宝具とコマンドカードの両方を実ユニット相性で更新する', () => {
   const source = fs.readFileSync(path.join(__dirname, '../js/command-affinity-labels.js'), 'utf8');
   assert.ok(source.includes(".command-card[data-actor-id], .np-command[data-np]"));
-  assert.ok(source.includes("global.FGO_ACTIVE_BATTLE_ENGINE"));
-  assert.ok(source.includes("RULES.resolveAttackClassAffinity(engine, actor, defender)"));
-  assert.ok(source.includes("engine.state.selectedEnemyId"));
+  assert.ok(source.includes('global.FGO_ACTIVE_BATTLE_ENGINE'));
+  assert.ok(source.includes('RULES.resolveAttackClassAffinity(engine, actor, defender)'));
+  assert.ok(source.includes('engine.state.selectedEnemyId'));
   assert.ok(source.includes("label = affinityKind === 'weak' ? 'WEAK' : 'RESIST'"));
 });
 
-test('WEAKとRESISTの専用スタイルを登録する', () => {
+test('WEAKとRESISTをカード上部中央へ配置する', () => {
   const css = fs.readFileSync(path.join(__dirname, '../css/command-affinity-labels.css'), 'utf8');
   assert.ok(css.includes('.command-affinity-badge.weak'));
   assert.ok(css.includes('.command-affinity-badge.resist'));
+  assert.ok(css.includes('left: 50%'));
+  assert.ok(css.includes('transform: translateX(-50%)'));
+  assert.ok(css.includes('.command-card.has-affinity-label'));
   assert.ok(css.includes('.np-command.has-affinity-label'));
+  assert.ok(!css.includes('left: 8px'));
 });
 
-test('index.htmlが完全版相性ルールをUIより先に読み込む', () => {
+test('index.htmlが完全版相性ルールを固有処理後、UI前に読み込む', () => {
   const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
   assert.ok(html.includes('js/class-affinity-rules.js'));
   assert.ok(html.includes('js/command-affinity-labels.js'));
+  assert.ok(html.indexOf('js/class-affinity-rules.js') > html.indexOf('js/unique-mechanics/rlyeh.js'));
   assert.ok(html.indexOf('js/class-affinity-rules.js') < html.indexOf('js/app.js'));
   assert.ok(html.indexOf('js/command-affinity-labels.js') > html.indexOf('js/app.js'));
 });
