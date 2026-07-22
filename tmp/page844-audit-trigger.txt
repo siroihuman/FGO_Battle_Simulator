@@ -1,1 +1,1 @@
-trigger Baphomet implementation
+run Baphomet data integration and tests
