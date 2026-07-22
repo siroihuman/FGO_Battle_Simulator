@@ -1,0 +1,45 @@
+name: Fetch Page 815
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    if: github.head_ref == 'implement-page-815'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm init -y
+          npm install playwright
+          npx playwright install --with-deps chromium
+      - name: Fetch page
+        run: |
+          node - <<'NODE'
+          const { chromium } = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ locale: 'ja-JP' });
+            await page.goto('https://w.atwiki.jp/siroi_human/pages/815.html', { waitUntil: 'networkidle', timeout: 120000 });
+            await page.waitForTimeout(3000);
+            require('fs').writeFileSync('page-815.html', await page.content());
+            require('fs').writeFileSync('page-815.txt', await page.locator('body').innerText());
+            await page.screenshot({ path: 'page-815.png', fullPage: true });
+            await browser.close();
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: page-815
+          path: |
+            page-815.html
+            page-815.txt
+            page-815.png
