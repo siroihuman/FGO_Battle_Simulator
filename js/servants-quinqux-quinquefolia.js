@@ -43,7 +43,7 @@
     starWeight: 104,
     deathRate: 35.0,
     skillIcons: [
-      'skill-general-084.png',
+      'skill-unique-032.png',
       'skill-np-charge.png',
       'skill-general-062.png'
     ],
@@ -93,7 +93,7 @@
     passives: [
       {
         name: '複合神格 EX',
-        icon: 'class-divinity.png',
+        icon: 'class-general-009.png',
         effects: [
           { type: 'damagePlus', value: 300 },
           { type: 'damageCut', value: 300 },
@@ -102,16 +102,16 @@
       },
       {
         name: '多重人格隔離 A',
-        icon: 'class-madness-enhancement.png',
+        icon: 'skill-buster-up.png',
         effects: [
           { type: 'cardUp', card: 'buster', value: 10 },
-          { type: 'mentalDebuffImmune', value: 1 },
-          { type: 'skillSealImmune', value: 1 }
+          { type: 'mentalDebuffImmune', value: 1, statusIcon: 'Debuffimmune.webp' },
+          { type: 'skillSealImmune', value: 1, statusIcon: 'Debuffimmune.webp' }
         ]
       },
       {
         name: '狡知の星 A',
-        icon: 'class-independent-action.png',
+        icon: 'skill-general-033.png',
         effects: [
           { type: 'starsPerTurn', value: 2 },
           { type: 'debuffResist', value: 20 }
@@ -119,15 +119,14 @@
       },
       {
         name: '勝者には栄光を、敗者には代償を、観客には喝采を A',
-        icon: 'skill-general-084.png',
+        icon: 'skill-general-024.png',
         effects: [
-          { type: 'quinquxWinnerGlory', value: 50 },
-          { type: 'quinquxAudienceApplause', value: 20 }
+          { type: 'quinquxWinnerGlory', value: 50, statusIcon: 'Critdmgup.webp' }
         ]
       },
       {
         name: 'ハイ・サーヴァント A',
-        icon: 'class-high-servant.png',
+        icon: 'skill-non.png',
         effects: []
       }
     ],
