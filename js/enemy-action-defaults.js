@@ -11,7 +11,7 @@
   }
 
   const OriginalBattleEngine = ENGINE.BattleEngine;
-  const STORAGE_KEY = ENEMY_DEFAULTS.storageKey || 'fgoEnemyClassSettingsV1';
+  const STORAGE_KEY = 'fgoEnemyActionSettingsV1';
   const ACTION_DEFAULTS = {
     saber: { actionCount: 3, actionPriority: 50 },
     archer: { actionCount: 3, actionPriority: 50 },
@@ -367,6 +367,19 @@
     };
     if (root) {
       new MutationObserver(schedule).observe(root, { childList: true, subtree: true });
+      root.addEventListener('click', (event) => {
+        const reset = event.target.closest && event.target.closest('#reset');
+        if (reset) saveSettings({});
+        const bulk = event.target.closest && event.target.closest('[data-bulk-wave]');
+        if (bulk) {
+          const settings = loadSettings();
+          const waveIndex = Number(bulk.dataset.bulkWave);
+          const source = settings[key(waveIndex, 0)] || {};
+          settings[key(waveIndex, 1)] = { ...source };
+          settings[key(waveIndex, 2)] = { ...source };
+          saveSettings(settings);
+        }
+      }, true);
       schedule();
     }
   }
