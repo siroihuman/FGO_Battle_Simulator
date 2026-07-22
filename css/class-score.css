@@ -45,6 +45,8 @@
 .class-skill-fold > summary { color: #a9d6ff; }
 .class-score-fold > summary { color: var(--gold-strong); }
 .class-score-fold { border-color: rgba(240, 201, 111, 0.28); }
+.craft-essence-fold > summary { color: #d7b8ff; }
+.craft-essence-fold { border-color: rgba(190, 143, 255, 0.3); }
 
 .class-effect-body {
   padding: 0 8px 8px;
@@ -53,6 +55,9 @@
 .class-effect-body .buff-icons { margin-top: 8px; }
 .class-score-fold .buff-icon.passive img {
   outline-color: var(--gold-strong);
+}
+.craft-essence-fold .buff-icon img {
+  outline-color: rgba(215, 184, 255, 0.9);
 }
 
 @media (max-width: 700px) {
