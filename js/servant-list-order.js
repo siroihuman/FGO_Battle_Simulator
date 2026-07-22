@@ -5,7 +5,8 @@
     'skadiCaster',
     'artoriaCaster',
     'koyanskayaLight',
-    'skadiRuler'
+    'skadiRuler',
+    'senNoRikyu'
   ]);
   const officialServantIdSet = new Set(OFFICIAL_SERVANT_IDS);
 
