@@ -1,0 +1,21 @@
+name: Export Fix Audit
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    if: github.head_ref == 'fix-baphomet-offering-icons'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Archive repository
+        run: tar --exclude='.git' --exclude='.github/workflows/export-fix-audit.yml' -czf /tmp/repository.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: baphomet-fix-audit
+          path: /tmp/repository.tar.gz
