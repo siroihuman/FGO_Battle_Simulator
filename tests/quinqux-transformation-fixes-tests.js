@@ -61,6 +61,8 @@ const disable = target.statuses.find((status) =>
 );
 assert.ok(disable, 'skillDisable / skillNumber: 1 を付与する');
 assert.strictEqual(disable.statusIcon, 'Skillseal.webp');
+assert.strictEqual(FIXES.skillSealIcon, 'Skillseal.webp');
+assert.strictEqual(DATA.statusIcons.skillDisable, 'Skillseal.webp');
 assert.strictEqual(e.getSkillAvailability(target.id, 0).available, false, 'スキル1だけ使用不可');
 assert.strictEqual(e.getSkillAvailability(target.id, 1).available, false, 'スキル2は元のCTが残るため使用不可');
 assert.strictEqual(e.getSkillAvailability(target.id, 2).available, true, 'スキル3は使用可能');
@@ -69,6 +71,7 @@ assert.strictEqual(e.getSkillAvailability(target.id, 2).available, true, 'スキ
 target.cooldowns[2] = 0;
 const result = e.useSkill(target.id, 2, e.getState().enemies[0].id);
 assert.strictEqual(result.ok, true);
+assert.strictEqual(target.cooldowns[2], 7, '変貌中のスキル3はクインクスの基礎CT9・Lv10をもとにCT7となる');
 assert.ok(target.statuses.some((status) =>
   status.type === 'quinquxUnbuffedOrLoserPower' && status.value === 50
 ), '変貌中のサーヴァントにも条件特攻を付与する');
@@ -79,5 +82,7 @@ assert.ok(quinqux.statuses.some((status) =>
 e._finishTurn();
 assert.strictEqual(target.classId, originalClassId, '効果終了後は元のクラスへ戻る');
 assert.strictEqual(target.data.classId, originalClassId, '表示用データも元のクラスへ戻る');
+assert.deepStrictEqual(target.cooldowns, [4, 2, 6], '未使用スキルは変貌前CTを維持し、変貌中に使用したスキルだけクインクス基準CTを引き継ぐ');
+assert.strictEqual(e.getSkillAvailability(target.id, 2).available, false, '変貌解除後も使用したスキルは再使用できない');
 
 console.log('quinqux-transformation-fixes-tests: OK');
