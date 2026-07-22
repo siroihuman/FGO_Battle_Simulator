@@ -37,6 +37,9 @@
   const isTransformed = (unit) => Boolean(unit && (unit.statuses || []).some(
     (status) => status.type === TRANSFORMED && isActive(status)
   ));
+  const hasSkillOneSeal = (unit) => Boolean(unit && (unit.statuses || []).some(
+    (status) => status.type === 'skillDisable' && Number(status.skillNumber) === 1 && isActive(status)
+  ));
   const levelValue = (effect, level) => Array.isArray(effect.values)
     ? Number(effect.values[Math.max(1, Math.min(10, Number(level || 10))) - 1] || 0)
     : Number(effect.value || 0);
@@ -62,7 +65,6 @@
   const originalUseSkill = proto.useSkill;
   proto.useSkill = function (allyId, skillIndex, selectedTargetId, selectedCardType) {
     const actor = this.getUnit(allyId);
-    const transformedActor = isTransformed(actor);
     const skill = actor && actor.data && actor.data.skills && actor.data.skills[skillIndex];
     const isMask = Boolean(actor && actor.servantId === SERVANT_ID && skill && skill.id === 'maskBelongingToNoOne');
     const target = isMask
@@ -76,13 +78,6 @@
     const level = actor ? Math.max(1, Math.min(10, Number(actor.skillLevels[skillIndex] || 10))) : 10;
 
     const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
-
-    // 変貌中に使用したスキルのCTは、クインクス側のスキルCTとして記録する。
-    if (transformedActor && result && result.ok && actor) {
-      if (!actor.__quinquxUsedSkillCooldowns) actor.__quinquxUsedSkillCooldowns = {};
-      actor.__quinquxUsedSkillCooldowns[skillIndex] = Number(actor.cooldowns[skillIndex] || 0);
-    }
-
     if (!isMask || !result || !result.ok || !target) return result;
 
     // 基礎実装が使用者へ加算したNPを戻し、変貌対象へ付与する。
@@ -91,7 +86,6 @@
 
     // 換装直後は変貌前のCTを維持する。
     target.cooldowns = cooldownsBefore.slice();
-    target.__quinquxUsedSkillCooldowns = {};
 
     // スキル本体だけでなく表示用アイコンもクインクス側へ同期する。
     target.data.skillIcons = Array.isArray(actor.data.skillIcons)
@@ -129,19 +123,25 @@
 
   const originalFinishTurn = proto._finishTurn;
   proto._finishTurn = function () {
-    const transformedCooldowns = this.state.allies.map((unit) => ({
-      unit,
-      used: { ...(unit.__quinquxUsedSkillCooldowns || {}) }
-    }));
+    // 変貌解除処理が元のCT配列へ戻す前に、変貌中の全スキルCTを保存する。
+    const transformedCooldowns = this.state.allies
+      .filter((unit) => isTransformed(unit))
+      .map((unit) => ({
+        unit,
+        cooldowns: unit.cooldowns.slice(),
+        skillOneSealed: hasSkillOneSeal(unit)
+      }));
 
     const result = originalFinishTurn.apply(this, arguments);
 
-    transformedCooldowns.forEach(({ unit, used }) => {
-      Object.keys(used).forEach((indexText) => {
-        const index = Number(indexText);
-        unit.cooldowns[index] = Math.max(0, Number(used[indexText] || 0) - 1);
-      });
-      delete unit.__quinquxUsedSkillCooldowns;
+    transformedCooldowns.forEach(({ unit, cooldowns, skillOneSealed }) => {
+      // スキル1は封印中のためターン経過では進めない。
+      // それ以外は通常どおり1進め、祝祭輪転などで変化した値をそのまま引き継ぐ。
+      unit.cooldowns = cooldowns.map((ct, index) =>
+        index === 0 && skillOneSealed
+          ? Math.max(0, Number(ct || 0))
+          : Math.max(0, Number(ct || 0) - 1)
+      );
 
       if (unit.__quinquxOriginalClassId == null) return;
       unit.classId = unit.__quinquxOriginalClassId;

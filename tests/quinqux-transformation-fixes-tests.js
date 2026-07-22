@@ -82,7 +82,15 @@ assert.ok(quinqux.statuses.some((status) =>
 e._finishTurn();
 assert.strictEqual(target.classId, originalClassId, '効果終了後は元のクラスへ戻る');
 assert.strictEqual(target.data.classId, originalClassId, '表示用データも元のクラスへ戻る');
-assert.deepStrictEqual(target.cooldowns, [4, 2, 6], '未使用スキルは変貌前CTを維持し、変貌中に使用したスキルだけクインクス基準CTを引き継ぐ');
+assert.deepStrictEqual(target.cooldowns, [4, 1, 6], '封印中のスキル1は進めず、その他は変貌中の全CT状態を維持して1進める');
 assert.strictEqual(e.getSkillAvailability(target.id, 2).available, false, '変貌解除後も使用したスキルは再使用できない');
+
+// 実報告のCT配列を再現する。変貌解除前が3/5/4なら、スキル1だけ停止して次ターンは3/4/3となる。
+const reported = engine();
+const [reportedQuinqux, reportedFenrir] = reported.getState().allies;
+reported.useSkill(reportedQuinqux.id, 0, reportedQuinqux.id);
+reportedFenrir.cooldowns = [3, 5, 4];
+reported._finishTurn();
+assert.deepStrictEqual(reportedFenrir.cooldowns, [3, 4, 3], '変貌解除後のCTを3/4/3で維持する');
 
 console.log('quinqux-transformation-fixes-tests: OK');
