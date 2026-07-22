@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const DATA = require('../js/data.js');
+require('../js/servants-sen-no-rikyu.js');
 const ORDER = require('../js/servant-list-order.js');
 
 const expectedOfficialOrder = [
