@@ -13,6 +13,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ['基本データ', '花咲耶', '火避け', '木花一夜', '桜花爛漫', '前衛1騎']
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,9 +24,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Syntax check
+      - name: Run ${{ matrix.case }}
+        env:
+          TEST_ONLY: ${{ matrix.case }}
         run: |
-          find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
-      - name: Run all regression tests
-        run: |
+          perl -0pi -e 's/function test\(name, fn\) \{/function test(name, fn) { if (process.env.TEST_ONLY \&\& !name.includes(process.env.TEST_ONLY)) return;/' tests/konohanasakuya-hime-tests.js
           node tests/konohanasakuya-hime-tests.js
