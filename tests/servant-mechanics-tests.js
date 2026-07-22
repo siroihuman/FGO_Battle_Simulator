@@ -11,7 +11,8 @@ function assert(condition, label) {
 }
 
 assert(Array.isArray(UNIQUE.list()), 'Unique Mechanicsレジストリを取得できる');
-assert(UNIQUE.list().length === 0, '登録済みサーヴァントに固有例外処理ファイルがない');
+const uniqueIds = UNIQUE.list().map((entry) => entry.servantId).sort();
+assert(JSON.stringify(uniqueIds) === JSON.stringify(['aliceLiddell', 'baphomet']), '固有例外処理はアリス・リデルとバフォメットだけに登録される');
 assert(Object.keys(DATA.servants).length > 0, 'サーヴァントデータは通常どおり登録される');
 
 const engine = new BattleEngine({
