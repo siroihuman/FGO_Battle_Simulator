@@ -22,6 +22,7 @@
   const TRANSFORMED = 'quinquxMaskTransformation';
   const LEGACY_SKILL_ONE_SEAL = 'quinquxSkillOneSeal';
   const CONDITIONAL_POWER = 'quinquxUnbuffedOrLoserPower';
+  const MASK_NP_VALUES = [30,32,34,36,38,40,42,44,46,50];
 
   const isActive = (status) => Boolean(status) &&
     (status.remaining == null || status.remaining < 0 || status.remaining > 0) &&
@@ -62,9 +63,16 @@
         .sort((a, b) => Number(a.slot || 0) - Number(b.slot || 0))[0] || null
       : null;
     const cooldownsBefore = target ? target.cooldowns.slice() : null;
+    const actorNpBefore = actor ? Number(actor.np || 0) : 0;
+    const targetClassBefore = target ? target.classId : null;
+    const level = actor ? Math.max(1, Math.min(10, Number(actor.skillLevels[skillIndex] || 10))) : 10;
 
     const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
     if (!isMask || !result || !result.ok || !target) return result;
+
+    // 基礎実装が使用者へ加算したNPを戻し、変貌対象へ付与する。
+    actor.np = actorNpBefore;
+    this._addNp(target, MASK_NP_VALUES[level - 1], true);
 
     // 換装後も使用済みスキルのCTをそのまま保持する。
     target.cooldowns = cooldownsBefore.slice();
@@ -73,6 +81,11 @@
     target.data.skillIcons = Array.isArray(actor.data.skillIcons)
       ? actor.data.skillIcons.slice()
       : [];
+
+    // 変貌中はクラスもクインクスと同じアルターエゴへ変更する。
+    target.__quinquxOriginalClassId = targetClassBefore;
+    target.classId = actor.classId;
+    target.data.classId = actor.classId;
 
     // 旧固有状態を廃止し、システム共通の個別スキル使用不可へ移行する。
     target.statuses = (target.statuses || []).filter((status) => status.type !== LEGACY_SKILL_ONE_SEAL);
@@ -98,10 +111,23 @@
     return result;
   };
 
+  const originalFinishTurn = proto._finishTurn;
+  proto._finishTurn = function () {
+    const result = originalFinishTurn.apply(this, arguments);
+    this.state.allies.forEach((unit) => {
+      if (unit.__quinquxOriginalClassId == null) return;
+      unit.classId = unit.__quinquxOriginalClassId;
+      if (unit.data) unit.data.classId = unit.__quinquxOriginalClassId;
+      delete unit.__quinquxOriginalClassId;
+    });
+    return result;
+  };
+
   const API = {
     servantId: SERVANT_ID,
     transformedType: TRANSFORMED,
-    skillDisableType: 'skillDisable'
+    skillDisableType: 'skillDisable',
+    maskNpValues: MASK_NP_VALUES.slice()
   };
   global.FGO_SIM_QUINQUX_FIXES = API;
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
