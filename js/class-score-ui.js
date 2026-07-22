@@ -2,6 +2,7 @@
   'use strict';
 
   const root = document.getElementById('app');
+  const DATA = window.FGO_SIM_DATA || { craftEssences: {} };
   if (!root) return;
 
   const foldState = new Map();
@@ -12,6 +13,21 @@
     if (skillButton) return skillButton.dataset.skill.split(':')[0];
     const name = card.querySelector('h3');
     return name ? name.textContent.trim() : 'unknown';
+  }
+
+  function statusSource(icon) {
+    const title = String(icon.getAttribute('title') || '');
+    const separator = title.lastIndexOf('｜');
+    return separator >= 0 ? title.slice(separator + 1).trim() : '';
+  }
+
+  function craftEssenceNames() {
+    return new Set(
+      Object.values(DATA.craftEssences || {})
+        .filter((craftEssence) => craftEssence && craftEssence.id !== 'none')
+        .map((craftEssence) => String(craftEssence.name || '').trim())
+        .filter(Boolean)
+    );
   }
 
   function makeFold(label, className, icons, stateKey) {
@@ -49,8 +65,12 @@
     if (!statusContainer) return;
 
     const allIcons = Array.from(statusContainer.querySelectorAll(':scope > .buff-icon'));
-    const passiveIcons = allIcons.filter((icon) => icon.classList.contains('passive'));
-    if (!passiveIcons.length) {
+    const ceNames = craftEssenceNames();
+    const craftEssenceIcons = allIcons.filter((icon) => ceNames.has(statusSource(icon)));
+    const passiveIcons = allIcons.filter((icon) =>
+      icon.classList.contains('passive') && !craftEssenceIcons.includes(icon)
+    );
+    if (!passiveIcons.length && !craftEssenceIcons.length) {
       card.dataset.classEffectsReady = 'true';
       return;
     }
@@ -68,12 +88,12 @@
       }
     });
 
-    passiveIcons.forEach((icon) => icon.remove());
+    passiveIcons.concat(craftEssenceIcons).forEach((icon) => icon.remove());
     if (!statusContainer.querySelector('.buff-icon')) statusContainer.remove();
 
     const panel = document.createElement('section');
     panel.className = 'class-passive-panel';
-    panel.setAttribute('aria-label', 'クラススキルとクラススコア');
+    panel.setAttribute('aria-label', 'クラススキル、クラススコア、概念礼装');
 
     const key = unitKey(card);
     if (classSkillIcons.length) {
@@ -90,6 +110,14 @@
         'class-score-fold',
         classScoreIcons,
         `${key}:classScore`
+      ));
+    }
+    if (craftEssenceIcons.length) {
+      panel.appendChild(makeFold(
+        '概念礼装',
+        'craft-essence-fold',
+        craftEssenceIcons,
+        `${key}:craftEssence`
       ));
     }
 
