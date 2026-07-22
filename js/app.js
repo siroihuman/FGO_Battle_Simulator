@@ -389,8 +389,12 @@
         <div class="order-modal-actions"><button type="button" id="order-confirm" class="primary-button" ${pending.front && pending.back ? '' : 'disabled'}>オーダーチェンジ確定</button><button type="button" id="cancel" class="secondary-button">キャンセル</button></div>
       </div></div>`;
     }
+    if (pending.kind === 'servantCardType' && !pending.card) {
+      return `<div class="modal-backdrop"><div class="target-modal-card"><h2>カードタイプ選択</h2><p>付与するカード性能アップブーストの色を選択してください。</p><button type="button" data-card-type="quick">Quick</button><button type="button" data-card-type="arts">Arts</button><button type="button" data-card-type="buster">Buster</button><button type="button" id="cancel">キャンセル</button></div></div>`;
+    }
     const units = pending.target === 'enemy' ? engine.getAliveEnemies() : engine.getAliveAllies();
-    return `<div class="modal-backdrop"><div class="target-modal-card"><h2>対象選択</h2>${units.map((unit) => `<button type="button" data-target="${unit.id}">${E(unit.name)}${pending.target === 'ally' ? duplicateBadge(unit, true) : ''}</button>`).join('')}<button type="button" id="cancel">キャンセル</button></div></div>`;
+    const heading = pending.kind === 'servantCardType' ? `${pending.card.toUpperCase()}を付与する対象選択` : '対象選択';
+    return `<div class="modal-backdrop"><div class="target-modal-card"><h2>${heading}</h2>${units.map((unit) => `<button type="button" data-target="${unit.id}">${E(unit.name)}${pending.target === 'ally' ? duplicateBadge(unit, true) : ''}</button>`).join('')}<button type="button" id="cancel">キャンセル</button></div></div>`;
   }
 
   function result() {
@@ -581,7 +585,9 @@
         const targetType = engine.getSkillTargetType(allyId, index);
         if (targetType === 'self') stableRender(() => engine.useSkill(allyId, index, allyId));
         else {
-          pending = { kind: 'servant', ally: allyId, index, target: targetType === 'enemy' ? 'enemy' : 'ally' };
+          pending = targetType === 'allyCardType'
+            ? { kind: 'servantCardType', ally: allyId, index, target: 'ally', card: null }
+            : { kind: 'servant', ally: allyId, index, target: targetType === 'enemy' ? 'enemy' : 'ally' };
           renderBattle({ viewport: captureViewport() });
         }
       };
@@ -597,11 +603,18 @@
         renderBattle({ viewport: captureViewport() });
       };
     });
+    root.querySelectorAll('[data-card-type]').forEach((button) => {
+      button.onclick = () => {
+        pending.card = button.dataset.cardType;
+        renderBattle({ viewport: captureViewport() });
+      };
+    });
     root.querySelectorAll('[data-target]').forEach((button) => {
       button.onclick = () => {
         const viewport = captureViewport();
-        if (pending.kind === 'servant') engine.useSkill(pending.ally, pending.index, button.dataset.target);
-        else engine.useMysticSkill(pending.index, button.dataset.target);
+        if (pending.kind === 'servant' || pending.kind === 'servantCardType') {
+          engine.useSkill(pending.ally, pending.index, button.dataset.target, pending.card);
+        } else engine.useMysticSkill(pending.index, button.dataset.target);
         pending = null;
         renderBattle({ viewport });
       };

@@ -55,12 +55,14 @@ test('呼応する悪夢は選択対象CT2・他味方CT1とHP2000減少', () =>
 test('古の支配者は選択色ブーストを付与しターン終了時に永久睡眠へ移行', () => {
   const e = engine([{ servantId: 'rlyeh', skillLevel: 10 }, { servantId: 'fenrir', skillLevel: 10 }]);
   const [rlyeh, target] = e.getState().allies;
+  const before = e._statusTotal(target, 'cardUp', { card: 'quick' });
   assert.strictEqual(e.useSkill(rlyeh.id, 2, target.id, 'quick').ok, true);
   assert.strictEqual(target.statuses.find((s) => s.type === RLYEH.statusTypes.cardBoost).statusIcon, 'Quickupboost.webp');
-  assert.strictEqual(e._statusTotal(target, 'cardUp', { card: 'quick' }), 100);
+  const rawAfter = before + 50;
+  assert.strictEqual(e._statusTotal(target, 'cardUp', { card: 'quick' }), rawAfter * 2);
   e._finishTurn();
   assert.strictEqual(target.statuses.some((s) => s.type === RLYEH.statusTypes.permanentSleep), true);
-  assert.strictEqual(target.statuses.some((s) => s.type === 'cardUp'), false);
+  assert.strictEqual(target.statuses.some((s) => s.type === 'cardUp' && !s.passive), false);
   assert.strictEqual(e.orderChange(target.id, 'ally-3').ok, false);
 });
 

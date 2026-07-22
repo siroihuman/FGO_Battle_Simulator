@@ -44,8 +44,8 @@
         effects: [
           { type: 'cooldownReduce', target: 'selectedAlly', value: 2 },
           { type: 'buffRemovalResist', target: 'selectedAlly', values: lv([50,55,60,65,70,75,80,85,90,100]), duration: 3 },
-          { type: 'cooldownReduce', target: 'allOtherAllies', value: 1 },
-          { type: 'hpLoss', target: 'allOtherAllies', value: 2000 }
+          { type: 'cooldownReduce', target: 'allAlliesExceptSelected', value: 1 },
+          { type: 'hpLoss', target: 'allAlliesExceptSelected', value: 2000 }
         ]
       },
       {

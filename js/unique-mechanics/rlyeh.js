@@ -81,6 +81,14 @@
     return status;
   };
 
+  const originalEffectTargets = proto._effectTargets;
+  proto._effectTargets = function (effect, source, selectedTargetId) {
+    if (effect && effect.target === 'allAlliesExceptSelected') {
+      return this.getAliveAllies().filter((unit) => unit.id !== selectedTargetId);
+    }
+    return originalEffectTargets.call(this, effect, source, selectedTargetId);
+  };
+
   const originalApplyEffect = proto._applyEffect;
   proto._applyEffect = function (effect, source, selectedTargetId, context) {
     if (!effect || effect.type !== 'rlyehInstantDeath') {
