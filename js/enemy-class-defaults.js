@@ -155,14 +155,27 @@
     return resolved;
   }
 
+  function enabledSetupWaveIndices() {
+    if (typeof document === 'undefined') return [];
+    return Array.from(document.querySelectorAll('input[name^="w"][name$="enabled"]'))
+      .filter((input) => input.checked)
+      .map((input) => {
+        const match = /^w(\d+)enabled$/.exec(input.name);
+        return match ? Number(match[1]) : null;
+      })
+      .filter((value) => value != null);
+  }
+
   function enrichBattleConfig(config) {
     const enriched = deepClone(config || {});
     const settings = loadSettings();
     const waves = Array.isArray(enriched.waves) ? enriched.waves : [];
+    const setupWaveIndices = enabledSetupWaveIndices();
     waves.forEach((wave, waveIndex) => {
+      const setupWaveIndex = setupWaveIndices[waveIndex] == null ? waveIndex : setupWaveIndices[waveIndex];
       (wave.enemies || []).forEach((enemy, enemyIndex) => {
-        const key = settingKey(waveIndex, enemyIndex);
-        const state = settingFromDom(waveIndex, enemyIndex, enemy, settings[key]);
+        const key = settingKey(setupWaveIndex, enemyIndex);
+        const state = settingFromDom(setupWaveIndex, enemyIndex, enemy, settings[key]);
         settings[key] = state;
         wave.enemies[enemyIndex] = resolveEnemyConfig(enemy, state);
       });
