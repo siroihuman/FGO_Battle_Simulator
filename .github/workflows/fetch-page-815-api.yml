@@ -1,0 +1,24 @@
+name: Fetch Page 815 API
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    if: github.head_ref == 'implement-page-815'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install client
+        run: pip install atwiki-python
+      - name: Fetch source
+        run: |
+          python -c "from atwiki import AtWikiAPI,AtWikiURI; print(AtWikiAPI(AtWikiURI('https://w.atwiki.jp/siroi_human/')).get_source(815))" > page-815-api.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: page-815-api
+          path: page-815-api.txt
