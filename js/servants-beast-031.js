@@ -39,7 +39,7 @@
     starRate: 9.9,
     starWeight: 145,
     deathRate: 1.0,
-    skillIcons: ['skill-quick-up.png', 'skill-np-charge.png', 'skill-buff-remove.png'],
+    skillIcons: ['skill-general-017.png', 'skill-np-charge.png', 'skill-general-062.png'],
     skills: [
       {
         id: 'primordialSin',
@@ -80,7 +80,7 @@
     passives: [
       {
         name: '怨讐の畔 EX',
-        icon: 'skill-general-084.png',
+        icon: 'class-unique-009.png',
         effects: [
           { type: 'beast031CooldownOnInstantDeath', value: 1 },
           { type: 'beast031SealMentalImmune', value: 1 }
@@ -98,7 +98,7 @@
       },
       {
         name: 'ネガ・ランド',
-        icon: 'skill-buff-add.png',
+        icon: 'skill-general-063.png',
         effects: [
           { type: 'buffRemovalResist', value: 20 },
           { type: 'instantDeathImmune', value: 1 }
