@@ -8,13 +8,14 @@ const expectedOfficialOrder = [
   'skadiCaster',
   'artoriaCaster',
   'koyanskayaLight',
-  'skadiRuler'
+  'skadiRuler',
+  'senNoRikyu'
 ];
 
 assert.deepStrictEqual(
   Array.from(ORDER.OFFICIAL_SERVANT_IDS),
   expectedOfficialOrder,
-  '公式枠の対象IDが指定された4騎と一致すること'
+  '公式枠の対象IDが指定された5騎と一致すること'
 );
 
 const orderedServants = Object.values(DATA.servants);
@@ -22,7 +23,7 @@ const officialTail = orderedServants.slice(-expectedOfficialOrder.length);
 assert.deepStrictEqual(
   officialTail.map((servant) => servant.id),
   expectedOfficialOrder,
-  '公式枠が一覧の最後尾でNo.215、284、314、357の順に並ぶこと'
+  '公式枠が一覧の最後尾でNo.215、284、314、357、362の順に並ぶこと'
 );
 
 const nonOfficialServants = orderedServants.slice(0, -expectedOfficialOrder.length);
