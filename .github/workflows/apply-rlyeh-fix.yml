@@ -3,6 +3,8 @@ name: Apply Rlyeh Fix
 on:
   push:
     branches: [fix-rlyeh-skill-passive]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
