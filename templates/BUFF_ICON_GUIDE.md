@@ -33,9 +33,8 @@ traitPowerUp: 'Dragontrait.webp'
 
 `statusIcon` がある場合は個別指定を優先し、ない場合は `statusIcons` の共通設定を使用します。
 
-
 ## 特性付与・カードブーストの共通アイコン
 
 特性を付与する状態は、付与タイミングにかかわらず `Dragontrait.webp` を使用します。
 
-カード性能アップブースト状態は、Quick=`Quickupboost.webp`、Arts=`Artsupboost.webp`、Buster=`Busterupboost.webp` を使用します。通常のカード性能アップとは別アイコンです。
+カード性能アップブースト状態は、Quick=`Quickupboost.webp`、Arts=`Artsupboost.webp`、Buster=`Busterupboost.webp` を使用します。通常のカード性能アップとは別アイコンです。各指定は拡張子を含む画像ファイル名として登録します。
