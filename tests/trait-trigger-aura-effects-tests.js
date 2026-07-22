@@ -80,7 +80,13 @@ test('一時特性はhasTraitへ反映され恒久traitsへ残らない', () => 
   assert.strictEqual(engine.countStatusStacks(enemy, { type: 'temporaryTrait', trait: 'チェック' }), 1);
   const summary = engine.getStatusSummary(enemy.id).find((status) => status.type === 'temporaryTrait');
   assert.strictEqual(summary.name, '〔チェック〕特性');
+  assert.strictEqual(summary.statusIcon, 'Dragontrait.webp');
   assert.strictEqual(summary.remaining, 1);
+});
+
+test('特性付与系状態はすべてDragontrait.webpを使用する', () => {
+  ['temporaryTrait', 'beforeAttackApplyTemporaryTrait', 'addTrait', 'onAttackAddTrait']
+    .forEach((type) => assert.strictEqual(DATA.statusIcons[type], 'Dragontrait.webp'));
 });
 
 test('一時特性は弱体解除とターン経過で消える', () => {

@@ -61,14 +61,14 @@
       burn: 'Poison.webp',
       curse: 'Poison.webp',
       dotAmplify: 'Statusup.webp',
-      temporaryTrait: 'Statusup.webp',
-      beforeAttackApplyTemporaryTrait: 'Buffatk.webp',
+      temporaryTrait: 'Dragontrait.webp',
+      beforeAttackApplyTemporaryTrait: 'Dragontrait.webp',
       triggerEffect: 'Statusup.webp',
       delayedEffect: 'Statusup.webp',
       aura: 'Statusup.webp',
       onNormalAttackApplyDebuff: 'Buffatk.webp',
-      addTrait: 'Statusup.webp',
-      onAttackAddTrait: 'Buffatk.webp'
+      addTrait: 'Dragontrait.webp',
+      onAttackAddTrait: 'Dragontrait.webp'
     },
     servants: {},
     craftEssences: {},

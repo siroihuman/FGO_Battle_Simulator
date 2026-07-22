@@ -36,6 +36,12 @@
   const WORSHIPPER_TRAIT = '怨嗟の崇拝者';
   const AFFINITY_TRAITS = ['道具作成', '陣地作成', '悪魔'];
   const CARD_BOOST_VALUES = [30, 32, 34, 36, 38, 40, 42, 44, 46, 50];
+  const TRAIT_ICON = 'Dragontrait.webp';
+  const CARD_BOOST_ICONS = {
+    quick: 'Quickupboost.webp',
+    arts: 'Artsupboost.webp',
+    buster: 'Busterupboost.webp'
+  };
   const TYPES = {
     blessing: 'baphometBlackGoatBlessing',
     durationLock: 'baphometBuffDurationLock',
@@ -74,15 +80,19 @@
       : {};
   }
 
-  function isRemovableBuff(status) {
-    return Boolean(
-      status && isActive(status) && !status.debuff && !status.passive &&
-      !status.unremovable && !UNIQUE_TYPES.has(status.type)
+  function isCraftEssenceStatus(status) {
+    if (!status) return false;
+    if (status.sourceType === 'craftEssence' || status.craftEssenceId) return true;
+    return Object.values(DATA.craftEssences || {}).some((craftEssence) =>
+      craftEssence && craftEssence.id !== 'none' && craftEssence.name === status.source
     );
   }
 
-  function isFrontlineProvider(unit) {
-    return isBaphomet(unit) && isAlive(unit) && unit.frontline !== false;
+  function isRemovableBuff(status) {
+    return Boolean(
+      status && isActive(status) && !status.debuff && !status.passive &&
+      !status.unremovable && !UNIQUE_TYPES.has(status.type) && !isCraftEssenceStatus(status)
+    );
   }
 
   function targetHasAffinityTrait(engine, target) {
@@ -101,10 +111,7 @@
     return engine.state.allies
       .filter((unit) => unit !== provider && isAlive(unit) && unit.frontline !== false)
       .sort((a, b) => Number(a.slot || 0) - Number(b.slot || 0))
-      .find((unit) =>
-        !hasActiveType(unit, TYPES.sacrificeImmune) &&
-        !hasActiveType(unit, TYPES.blessing)
-      ) || null;
+      .find((unit) => !hasActiveType(unit, TYPES.sacrificeImmune)) || null;
   }
 
   const originalAddStatus = proto._addStatus;
@@ -222,7 +229,7 @@
       duration,
       unremovable: true,
       uniqueKey: `${TYPES.blessing}:trait`,
-      statusIcon: 'Statusup.webp',
+      statusIcon: TRAIT_ICON,
       uniqueMechanicData: providerData
     }, 0, provider.name);
     engine._addStatus(target, {
@@ -231,7 +238,7 @@
       unremovable: true,
       uniqueKey: TYPES.blessing,
       label: STATUS_NAMES[TYPES.blessing],
-      statusIcon: 'Statusup.webp',
+      statusIcon: TRAIT_ICON,
       uniqueMechanicData: providerData
     }, 0, provider.name);
     engine._addStatus(target, {
@@ -240,7 +247,7 @@
       unremovable: true,
       uniqueKey: TYPES.durationLock,
       label: STATUS_NAMES[TYPES.durationLock],
-      statusIcon: 'Statusup.webp',
+      statusIcon: TRAIT_ICON,
       uniqueMechanicData: providerData
     }, 0, provider.name);
     engine._addStatus(target, {
@@ -250,7 +257,7 @@
       unremovable: true,
       uniqueKey: TYPES.cardBoost,
       label: STATUS_NAMES[TYPES.cardBoost],
-      statusIcon: 'Artsup.webp',
+      statusIcon: (DATA.cardStatusIcons && DATA.cardStatusIcons.boost && DATA.cardStatusIcons.boost.arts) || CARD_BOOST_ICONS.arts,
       uniqueMechanicData: providerData
     }, CARD_BOOST_VALUES[Math.max(1, Math.min(10, Number(level || 10))) - 1], provider.name);
     engine._addStatus(target, {
@@ -289,14 +296,15 @@
   }
 
   function transferBuffs(engine, target, provider) {
+    if (!isAlive(target) || !isAlive(provider)) {
+      engine._log(`${target ? target.name : '付与対象'}と対象のバフォメットが両方生存していないため、強化献上は発動しない。`, 'condition');
+      return [];
+    }
+
     const transferable = (target.statuses || []).filter(isRemovableBuff);
     if (!transferable.length) return [];
     target.statuses = target.statuses.filter((status) => !transferable.includes(status));
 
-    if (!isFrontlineProvider(provider)) {
-      engine._log(`フィールド上に対象のバフォメットがいないため、${target.name}の強化献上は無効。`, 'condition');
-      return [];
-    }
 
     const transferred = transferable.map((status) => {
       const cloned = deepClone(status);
@@ -388,15 +396,6 @@
     return result;
   };
 
-  const originalUseSkill = proto.useSkill;
-  proto.useSkill = function (allyId, skillIndex, selectedTargetId) {
-    const actor = this.getUnit(allyId);
-    if (isBaphomet(actor) && Number(skillIndex) === 2 && !firstSacrificeTarget(this, actor)) {
-      return { ok: false, reason: '生贄に選択できる先頭の味方がいません。' };
-    }
-    return originalUseSkill.call(this, allyId, skillIndex, selectedTargetId);
-  };
-
   const originalOrderChange = proto.orderChange;
   proto.orderChange = function (frontId, reserveId) {
     const front = this.getUnit(frontId);
@@ -423,8 +422,11 @@
   Object.entries(STATUS_NAMES).forEach(([type]) => {
     DATA.statusIcons[type] = DATA.statusIcons[type] || 'Statusup.webp';
   });
+  DATA.statusIcons[TYPES.blessing] = TRAIT_ICON;
+  DATA.statusIcons[TYPES.durationLock] = TRAIT_ICON;
   DATA.statusIcons[TYPES.contract] = 'DelayedDebuff.webp';
-  DATA.statusIcons[TYPES.cardBoost] = 'Artsup.webp';
+  DATA.statusIcons[TYPES.cardBoost] =
+    (DATA.cardStatusIcons && DATA.cardStatusIcons.boost && DATA.cardStatusIcons.boost.arts) || CARD_BOOST_ICONS.arts;
 
   REGISTRY.register(SERVANT_ID, {
     name: 'バフォメット',
@@ -448,6 +450,7 @@
     affinityTraits: AFFINITY_TRAITS.slice(),
     statusTypes: { ...TYPES },
     cardBoostValues: CARD_BOOST_VALUES.slice(),
+    cardBoostIcons: { ...CARD_BOOST_ICONS },
     definition: REGISTRY.get(SERVANT_ID)
   };
 

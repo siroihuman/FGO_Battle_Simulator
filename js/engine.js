@@ -261,7 +261,7 @@
       const ce = DATA.craftEssences[ally.craftEssenceId] || DATA.craftEssences.none;
       (ce.effects || []).forEach((effect) => {
         if (effect.type === 'npCharge') ally.np = clamp(ally.np + Number(effect.value || 0), 0, 300);
-        else ally.statuses.push({ ...deepClone(effect), source: ce.name, remaining: effect.duration == null ? -1 : effect.duration, passive: false, uses: effect.uses == null ? null : effect.uses });
+        else ally.statuses.push({ ...deepClone(effect), source: ce.name, sourceType: 'craftEssence', craftEssenceId: ce.id, remaining: effect.duration == null ? -1 : effect.duration, passive: false, uses: effect.uses == null ? null : effect.uses });
       });
       data.passives.forEach((passive) => {
         passive.effects.forEach((effect) => {

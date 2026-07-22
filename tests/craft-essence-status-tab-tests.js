@@ -62,6 +62,10 @@ test('概念礼装由来状態は礼装名をsourceとして保持する', () =>
     assert.strictEqual(status.passive, false);
     assert.strictEqual(status.remaining, -1);
   });
+  engine.getState().allies[0].statuses.filter((status) => status.source === '黒の聖杯').forEach((status) => {
+    assert.strictEqual(status.sourceType, 'craftEssence');
+    assert.strictEqual(status.craftEssenceId, 'blackGrail');
+  });
 });
 
 test('概念礼装状態を通常バフ欄から専用タブへ移動するUIを登録する', () => {

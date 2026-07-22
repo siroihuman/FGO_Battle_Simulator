@@ -70,6 +70,13 @@ test('カード別アイコン定義を登録', () => {
   });
 });
 
+test('Q/A/Bカード性能アップブースト用アイコンを登録', () => {
+  assert.deepStrictEqual(CARD_BUFFS.boostIcons, {
+    quick: 'Quickupboost.webp', arts: 'Artsupboost.webp', buster: 'Busterupboost.webp'
+  });
+  assert.deepStrictEqual(DATA.cardStatusIcons.boost, CARD_BUFFS.boostIcons);
+});
+
 test('Q/A/B/Ex性能アップとQ/A/B性能ダウンに個別アイコンを表示', () => {
   const engine = makeEngine();
   const actor = engine.getState().allies[0];
