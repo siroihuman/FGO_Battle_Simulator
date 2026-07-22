@@ -1,7 +1,7 @@
 .command-affinity-badge {
   position: absolute;
   top: 7px;
-  left: 8px;
+  left: 50%;
   z-index: 3;
   display: inline-flex;
   align-items: center;
@@ -9,6 +9,7 @@
   min-width: 48px;
   min-height: 20px;
   padding: 2px 8px;
+  transform: translateX(-50%);
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
   color: #fff;
@@ -31,6 +32,7 @@
   background: linear-gradient(180deg, #5a9cf1, #22509a);
 }
 
+.command-card.has-affinity-label,
 .np-command.has-affinity-label {
   padding-top: 31px;
 }
@@ -38,13 +40,13 @@
 @media (max-width: 700px) {
   .command-affinity-badge {
     top: 5px;
-    left: 6px;
     min-width: 42px;
     min-height: 18px;
     padding: 2px 6px;
     font-size: 9px;
   }
 
+  .command-card.has-affinity-label,
   .np-command.has-affinity-label {
     padding-top: 28px;
   }
