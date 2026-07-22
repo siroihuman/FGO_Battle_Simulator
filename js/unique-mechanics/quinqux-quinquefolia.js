@@ -59,6 +59,31 @@
     return status;
   };
 
+  function installAudienceApplause(engine) {
+    const providers = engine.state.allies.filter(isQuinqux);
+    providers.forEach((provider) => {
+      engine.state.allies.filter((unit) => unit !== provider).forEach((unit) => {
+        const uniqueKey = `quinqux-audience:${provider.id}`;
+        if ((unit.statuses || []).some((status) => status.uniqueKey === uniqueKey)) return;
+        const status = engine._addStatus(unit, {
+          type: TYPES.audienceApplause,
+          duration: -1,
+          statusIcon: 'Attackup.webp'
+        }, 20, '勝者には栄光を、敗者には代償を、観客には喝采を A');
+        status.passive = true;
+        status.unremovable = true;
+        status.uniqueKey = uniqueKey;
+      });
+    });
+  }
+
+  const originalInitialize = proto._initialize;
+  proto._initialize = function () {
+    const result = originalInitialize.apply(this, arguments);
+    installAudienceApplause(this);
+    return result;
+  };
+
   const originalStatusTotal = proto._statusTotal;
   proto._statusTotal = function (unit, type, filter) {
     const base = originalStatusTotal.call(this, unit, type, filter);
@@ -151,9 +176,8 @@
     }
 
     if (hasLosersCost(target)) {
-      const applause = this.state.allies
-        .filter((provider) => provider !== actor && provider.frontline && provider.alive && isQuinqux(provider))
-        .flatMap((provider) => (provider.statuses || []).filter((status) => status.type === TYPES.audienceApplause && isActive(status)))
+      const applause = (actor.statuses || [])
+        .filter((status) => status.type === TYPES.audienceApplause && isActive(status))
         .reduce((sum, status) => sum + Number(status.value || 0), 0);
       if (applause) addTemporary('attackUp', applause, STATUS_NAMES[TYPES.audienceApplause]);
     }
@@ -196,7 +220,7 @@
       debuff: false,
       passive: false,
       unremovable: true,
-      statusIcon: 'Buffatk.webp'
+      statusIcon: 'Dragontrait.webp'
     });
     target.statuses.push({
       type: TYPES.skillOneSeal,
