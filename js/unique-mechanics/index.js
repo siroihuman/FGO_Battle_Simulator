@@ -1,7 +1,7 @@
 'use strict';
 
-// Unique Mechanicsを持つサーヴァントが追加された場合のみ、
-// このファイルで個別ファイルをrequireしてください。
 const registry = require('./registry.js');
+require('./alice-liddell.js');
+require('./baphomet.js');
 
 module.exports = registry;
