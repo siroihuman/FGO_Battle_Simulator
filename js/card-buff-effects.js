@@ -31,6 +31,12 @@
     extra: { up: 'Extraattackup.webp', down: 'Extraattackup.webp' }
   };
 
+  const CARD_BOOST_ICONS = {
+    quick: 'Quickupboost.webp',
+    arts: 'Artsupboost.webp',
+    buster: 'Busterupboost.webp'
+  };
+
   const PERFORMANCE_TYPES = new Set(['cardUp', 'cardDown']);
   const POWER_TYPES = new Set(['cardPowerUp', 'cardPowerDown']);
   const CARD_TYPES = new Set([...PERFORMANCE_TYPES, ...POWER_TYPES]);
@@ -147,12 +153,14 @@
   DATA.statusIcons.cardPowerDown = DATA.statusIcons.cardPowerDown || 'Statusup.webp';
   DATA.cardStatusIcons = {
     performance: JSON.parse(JSON.stringify(CARD_ICONS)),
-    power: JSON.parse(JSON.stringify(CARD_ICONS))
+    power: JSON.parse(JSON.stringify(CARD_ICONS)),
+    boost: JSON.parse(JSON.stringify(CARD_BOOST_ICONS))
   };
 
   const API = {
     cardNames: { ...CARD_NAMES },
     icons: JSON.parse(JSON.stringify(CARD_ICONS)),
+    boostIcons: JSON.parse(JSON.stringify(CARD_BOOST_ICONS)),
     performanceTypes: Array.from(PERFORMANCE_TYPES),
     powerTypes: Array.from(POWER_TYPES),
     displayForStatus

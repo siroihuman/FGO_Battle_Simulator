@@ -428,8 +428,8 @@
     });
   };
 
-  DATA.statusIcons.temporaryTrait = DATA.statusIcons.temporaryTrait || 'Statusup.webp';
-  DATA.statusIcons.beforeAttackApplyTemporaryTrait = DATA.statusIcons.beforeAttackApplyTemporaryTrait || 'Buffatk.webp';
+  DATA.statusIcons.temporaryTrait = DATA.statusIcons.temporaryTrait || 'Dragontrait.webp';
+  DATA.statusIcons.beforeAttackApplyTemporaryTrait = DATA.statusIcons.beforeAttackApplyTemporaryTrait || 'Dragontrait.webp';
   DATA.statusIcons.triggerEffect = DATA.statusIcons.triggerEffect || 'Statusup.webp';
   DATA.statusIcons.delayedEffect = DATA.statusIcons.delayedEffect || 'Statusup.webp';
   DATA.statusIcons.aura = DATA.statusIcons.aura || 'Statusup.webp';
