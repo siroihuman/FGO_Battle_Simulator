@@ -390,7 +390,7 @@
           { name: '対魔力 B', icon: 'class-magic-resistance.png', effects: [{ type: 'debuffResist', value: 17.5 }] },
           { name: '狂化 A+（B+相当）', icon: 'class-madness-enhancement.png', effects: [{ type: 'cardUp', card: 'buster', value: 9 }] },
           { name: '神性 E-', icon: 'class-divinity.png', effects: [{ type: 'damagePlus', value: 95 }] },
-          { name: '野性 A', icon: 'skill-crit-up.png', effects: [{ type: 'starRateUp', value: 10 }, { type: 'critUp', value: 10 }] }
+          { name: '野性 A', icon: 'skill-general-034.png', effects: [{ type: 'starRateUp', value: 10 }, { type: 'critUp', value: 10 }] }
         ],
         np: {
           id: 'ragnarokHrodvitnir',
@@ -730,9 +730,9 @@
         starWeight: 9,
         deathRate: 56.8,
         skillIcons: [
-          'skill-buff-add.png',
-          'skill-attack-up.png',
-          'skill-np-per-turn.png'
+          'skill-general-014.png',
+          'skill-np-charge.png',
+          'skill-special-attack.png'
         ],
         skills: [
           {
@@ -798,7 +798,7 @@
           },
           {
             name: '王の棺 A',
-            icon: 'class-special-attack.png',
+            icon: 'skill-poison.png',
             effects: [
               { type: 'traitPowerUp', trait: '王', value: 20 },
               {
@@ -864,8 +864,8 @@
         starWeight: 10,
         deathRate: 39.0,
         skillIcons: [
-          'skill-arts-up.png',
-          'skill-special-attack.png',
+          'skill-general-016.png',
+          'skill-unique-035.png',
           'skill-np-charge.png'
         ],
         skills: [
@@ -961,7 +961,7 @@
           },
           {
             name: '夢見る少女の物語 C',
-            icon: 'class-no-effect.png',
+            icon: 'skill-np-per-turn.png',
             effects: [
               { type: 'npPerTurn', value: 5 },
               {
@@ -1034,9 +1034,9 @@
         starWeight: 200,
         deathRate: 30.0,
         skillIcons: [
-          'skill-attack-up.png',
+          'skill-general-005.png',
           'skill-np-charge.png',
-          'skill-np-charge.png'
+          'skill-general-030.png'
         ],
         skills: [
           {
