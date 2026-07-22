@@ -6,5 +6,6 @@ require('./baphomet.js');
 require('./rlyeh.js');
 require('./beast-031.js');
 require('./beast-031-np-special.js');
+require('./beast-031-status-icons.js');
 
 module.exports = registry;
