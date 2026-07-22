@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        case: ['基本データ', '花咲耶', '火避け', '木花一夜', '桜花爛漫', '前衛1騎']
+        check: [debuff, evade, arts, allynp, actornp, defense, focus]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,9 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run ${{ matrix.case }}
+      - name: Check ${{ matrix.check }}
         env:
-          TEST_ONLY: ${{ matrix.case }}
-        run: |
-          perl -0pi -e 's/function test\(name, fn\) \{/function test(name, fn) { if (process.env.TEST_ONLY \&\& !name.includes(process.env.TEST_ONLY)) return;/' tests/konohanasakuya-hime-tests.js
-          node tests/konohanasakuya-hime-tests.js
+          CHECK: ${{ matrix.check }}
+        run: node tests/konohana-diagnostic.js
