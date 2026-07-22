@@ -84,6 +84,8 @@
     require('./servants.js');
     require('./servants-dominion-foreigner.js');
     require('./servants-rlyeh.js');
+    require('./servants-sen-no-rikyu.js');
+    require('./servants-beast-031.js');
     require('./craft-essences.js');
     require('./mystic-codes.js');
     require('./class-score.js');
