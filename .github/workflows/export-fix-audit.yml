@@ -21,7 +21,7 @@ jobs:
           node-version: 20
       - name: Apply verified implementation
         run: |
-          cat tmp/baphomet-fix.part00 tmp/baphomet-fix.part01 tmp/baphomet-fix.part02 tmp/baphomet-fix.part03 > /tmp/baphomet-fix.b64
+          cat tmp/baphomet-fix.part00 tmp/baphomet-fix.part01 tmp/baphomet-fix.part02 tmp/baphomet-fix.part03a tmp/baphomet-fix.part03b tmp/baphomet-fix.part03c > /tmp/baphomet-fix.b64
           base64 --decode /tmp/baphomet-fix.b64 > /tmp/baphomet-fix.tar.gz
           echo '679bbfa5ae6b69ea399fea414a4be5ce4feae8ef19f8f1437bdff5670706c036  /tmp/baphomet-fix.tar.gz' | sha256sum --check
           tar -xzf /tmp/baphomet-fix.tar.gz -C .
@@ -32,7 +32,7 @@ jobs:
       - name: Remove temporary files
         run: |
           rm -f .github/workflows/export-fix-audit.yml
-          rm -f tmp/baphomet-fix.part00 tmp/baphomet-fix.part01 tmp/baphomet-fix.part02 tmp/baphomet-fix.part03
+          rm -f tmp/baphomet-fix.part00 tmp/baphomet-fix.part01 tmp/baphomet-fix.part02 tmp/baphomet-fix.part03 tmp/baphomet-fix.part03a tmp/baphomet-fix.part03b tmp/baphomet-fix.part03c
           rmdir tmp 2>/dev/null || true
       - name: Commit formal changes
         run: |
