@@ -94,6 +94,7 @@ test('────は有利条件を不利条件より先に判定する', () =>
   assert.strictEqual(RULES.resolveAttackClassAffinity(engine, firstMurder, unit({ attribute: 'sky', traits: ['ヒト科'] })), 2);
   assert.strictEqual(RULES.resolveAttackClassAffinity(engine, firstMurder, unit({ attribute: 'sky', traits: ['ヒト科以外'] })), 0.5);
   assert.strictEqual(RULES.resolveAttackClassAffinity(engine, firstMurder, unit({ attribute: 'earth', traits: ['ヒト科以外'] })), 0.5);
+  assert.strictEqual(RULES.resolveAttackClassAffinity(engine, firstMurder, unit({ attribute: 'earth', traits: ['神性'] })), 1);
 });
 
 test('バフォメットは道具作成・陣地作成・悪魔に2倍有利を取る', () => {
