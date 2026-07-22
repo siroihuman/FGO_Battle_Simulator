@@ -9,14 +9,14 @@ OUT = pathlib.Path('page815-commoncrawl')
 OUT.mkdir(exist_ok=True)
 headers = {'User-Agent': 'FGO-Battle-Simulator-Research/1.0'}
 
-with urllib.request.urlopen(urllib.request.Request('https://index.commoncrawl.org/collinfo.json', headers=headers), timeout=60) as response:
+with urllib.request.urlopen(urllib.request.Request('https://index.commoncrawl.org/collinfo.json', headers=headers), timeout=30) as response:
     collections = json.load(response)
 
 matches = []
-for collection in collections[:40]:
+for collection in collections[:12]:
     api = collection['cdx-api'] + '?' + urllib.parse.urlencode({'url': TARGET, 'output': 'json', 'filter': 'status:200'})
     try:
-        with urllib.request.urlopen(urllib.request.Request(api, headers=headers), timeout=60) as response:
+        with urllib.request.urlopen(urllib.request.Request(api, headers=headers), timeout=15) as response:
             lines = response.read().decode('utf-8', 'replace').splitlines()
     except Exception as error:
         matches.append({'collection': collection['id'], 'error': repr(error)})
@@ -32,7 +32,7 @@ for collection in collections[:40]:
     end = start + int(record['length']) - 1
     data_url = 'https://data.commoncrawl.org/' + record['filename']
     request = urllib.request.Request(data_url, headers={**headers, 'Range': f'bytes={start}-{end}'})
-    with urllib.request.urlopen(request, timeout=120) as response:
+    with urllib.request.urlopen(request, timeout=60) as response:
         compressed = response.read()
     raw = gzip.decompress(compressed)
     (OUT / 'record.bin').write_bytes(raw)
