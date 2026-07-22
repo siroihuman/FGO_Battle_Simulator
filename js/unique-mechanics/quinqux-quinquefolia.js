@@ -69,6 +69,16 @@
     return base - loserDefenseDown;
   };
 
+  const originalTraitPower = proto._traitPower;
+  proto._traitPower = function (actor, target) {
+    const base = originalTraitPower.call(this, actor, target);
+    if (!actor || !target || !(hasLosersCost(target) || isUnbuffed(target))) return base;
+    const conditional = (actor.statuses || [])
+      .filter((status) => status.type === TYPES.conditionalPower && isActive(status))
+      .reduce((sum, status) => sum + Number(status.value || 0), 0);
+    return base + conditional;
+  };
+
   const originalTryApplyDebuff = proto._tryApplyDebuff;
   proto._tryApplyDebuff = function (source, target, effect, sourceLabel) {
     const type = effect && (effect.debuffType || effect.type);
@@ -146,13 +156,6 @@
         .flatMap((provider) => (provider.statuses || []).filter((status) => status.type === TYPES.audienceApplause && isActive(status)))
         .reduce((sum, status) => sum + Number(status.value || 0), 0);
       if (applause) addTemporary('attackUp', applause, STATUS_NAMES[TYPES.audienceApplause]);
-    }
-
-    const conditional = (actor.statuses || [])
-      .filter((status) => status.type === TYPES.conditionalPower && isActive(status))
-      .reduce((sum, status) => sum + Number(status.value || 0), 0);
-    if (conditional && (hasLosersCost(target) || isUnbuffed(target))) {
-      addTemporary('traitPowerUp', conditional, STATUS_NAMES[TYPES.conditionalPower]);
     }
 
     try {
