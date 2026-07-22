@@ -84,7 +84,9 @@ test('火避けの加護と富士の御力は掲載効果を処理', () => {
   assert.strictEqual(e.useSkill(actor.id, 1, actor.id).ok, true);
   assert.strictEqual(ally.statuses.some((s) => s.type === 'attackDown'), false);
   assert.strictEqual(ally.statuses.find((s) => s.type === 'evade').uses, 2);
-  assert.strictEqual(e._statusTotal(ally, 'cardUp', { card: 'arts' }), 20);
+  const artsUp = ally.statuses.find((s) => s.type === 'cardUp' && s.card === 'arts');
+  assert.ok(artsUp);
+  assert.strictEqual(artsUp.value, 20);
   assert.strictEqual(e._statusTotal(ally, 'defenseUp'), 20);
 
   assert.strictEqual(e.useSkill(actor.id, 2, actor.id).ok, true);
