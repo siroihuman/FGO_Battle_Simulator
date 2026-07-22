@@ -43,13 +43,18 @@ function engine() {
 const e = engine();
 const [quinqux, target] = e.getState().allies;
 const originalIcons = target.data.skillIcons.slice();
+const originalClassId = target.classId;
 target.cooldowns = [4, 2, 0];
 
 const transformed = e.useSkill(quinqux.id, 0, quinqux.id);
 assert.strictEqual(transformed.ok, true);
+assert.strictEqual(quinqux.np, 0, '使用者自身のNPは増加しない');
+assert.strictEqual(target.np, 50, '変貌対象のNPがスキルレベル10で50増加する');
 assert.deepStrictEqual(target.cooldowns, [4, 2, 0], '変貌前のCTを維持する');
 assert.deepStrictEqual(target.data.skillIcons, quinqux.data.skillIcons, '変貌後はスキルアイコンも同期する');
 assert.notDeepStrictEqual(target.data.skillIcons, originalIcons, '元のスキルアイコンのままにしない');
+assert.strictEqual(target.classId, 'alterEgo', '変貌中はクラスもアルターエゴになる');
+assert.strictEqual(target.data.classId, 'alterEgo', '表示用データのクラスもアルターエゴになる');
 
 const disable = target.statuses.find((status) =>
   status.type === FIXES.skillDisableType && Number(status.skillNumber) === 1
@@ -70,5 +75,9 @@ assert.ok(target.statuses.some((status) =>
 assert.ok(quinqux.statuses.some((status) =>
   status.type === 'quinquxUnbuffedOrLoserPower' && status.value === 50
 ), '元のクインクスにも条件特攻を付与する');
+
+e._finishTurn();
+assert.strictEqual(target.classId, originalClassId, '効果終了後は元のクラスへ戻る');
+assert.strictEqual(target.data.classId, originalClassId, '表示用データも元のクラスへ戻る');
 
 console.log('quinqux-transformation-fixes-tests: OK');
