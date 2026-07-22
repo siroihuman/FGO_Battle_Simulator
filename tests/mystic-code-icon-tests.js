@@ -1,7 +1,9 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 const DATA = require(path.join(__dirname, '..', 'js', 'data.js'));
 const ICON_UI = require(path.join(__dirname, '..', 'js', 'mystic-code-skill-icons.js'));
 
@@ -25,5 +27,44 @@ mysticCodes.forEach((mysticCode) => {
     );
   });
 });
+
+const source = fs.readFileSync(path.join(__dirname, '..', 'js', 'mystic-code-skill-icons.js'), 'utf8');
+const image = { src: '', alt: '' };
+const button = {
+  dataset: { master: '0' },
+  querySelector(selector) { return selector === 'img' ? image : null; }
+};
+const appRoot = {
+  querySelectorAll(selector) {
+    return selector === '.mystic-panel [data-master]' ? [button] : [];
+  }
+};
+let mutationCallback = null;
+
+class MockBattleEngine {
+  getMysticCode() {
+    return { skills: [{ name: '個別アイコン', icon: 'skill-attack-up.png' }] };
+  }
+}
+
+class MockMutationObserver {
+  constructor(callback) { mutationCallback = callback; }
+  observe() {}
+}
+
+const context = {
+  FGO_SIM_ENGINE: { BattleEngine: MockBattleEngine },
+  document: { getElementById: () => appRoot },
+  MutationObserver: MockMutationObserver,
+  console
+};
+vm.createContext(context);
+vm.runInContext(source, context);
+
+const engine = new context.FGO_SIM_ENGINE.BattleEngine();
+engine.getMysticCode();
+mutationCallback();
+assert.strictEqual(image.src, 'assets/skill-icons/skill-attack-up.png');
+assert.strictEqual(image.alt, '個別アイコン');
 
 console.log('mystic-code-icon-tests: OK');
