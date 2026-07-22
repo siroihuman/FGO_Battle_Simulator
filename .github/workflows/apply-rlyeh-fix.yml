@@ -1,0 +1,33 @@
+name: Apply Rlyeh Fix
+
+on:
+  push:
+    branches: [fix-rlyeh-skill-passive]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix-rlyeh-skill-passive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Apply patch
+        run: python3 tools/patch-rlyeh-fix.py
+      - name: Syntax check
+        run: find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Run regression tests
+        run: node tests/run-all.js
+      - name: Commit verified changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add js tests
+          git commit -m "Fix Rlyeh skill and passive effects"
+          git push origin HEAD:fix-rlyeh-skill-passive
