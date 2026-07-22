@@ -34,9 +34,9 @@
     starWeight: 145,
     deathRate: 5.0,
     skillIcons: [
-      'skill-buff-add.png',
-      'skill-buff-add.png',
-      'skill-buff-add.png'
+      'skill-general-051.png',
+      'skill-general-019.png',
+      'skill-general-010.png'
     ],
     skills: [
       {
@@ -80,7 +80,7 @@
     passives: [
       {
         name: '神話を現す者 EX',
-        icon: 'skill-buff-add.png',
+        icon: 'skill-general-012.png',
         effects: [
           { type: 'aura', modifierType: 'npPerTurn', target: 'allAllies', value: 2.5, providerFrontlineOnly: true },
           {
@@ -93,7 +93,7 @@
       },
       {
         name: '空想の水 EX',
-        icon: 'skill-buff-add.png',
+        icon: 'skill-general-019.png',
         effects: [
           { type: 'cardUp', card: 'quick', value: 12 },
           { type: 'damagePlus', value: 250 }
@@ -101,14 +101,14 @@
       },
       {
         name: '領域外の生命 EX',
-        icon: 'skill-buff-add.png',
+        icon: 'class-general-013.png',
         effects: [
           { type: 'starsPerTurn', value: 2 },
           { type: 'debuffResist', value: 12 }
         ]
       },
-      { name: '陣地作成 A', icon: 'skill-buff-add.png', effects: [{ type: 'cardUp', card: 'arts', value: 10 }] },
-      { name: '道具作成 A+++', icon: 'skill-buff-add.png', effects: [{ type: 'debuffSuccess', value: 11.75 }] }
+      { name: '陣地作成 A', icon: 'class-general-012.png', effects: [{ type: 'cardUp', card: 'arts', value: 10 }] },
+      { name: '道具作成 A+++', icon: 'class-general-011.png', effects: [{ type: 'debuffSuccess', value: 11.75 }] }
     ],
     np: {
       id: 'callOfCthulhu',
