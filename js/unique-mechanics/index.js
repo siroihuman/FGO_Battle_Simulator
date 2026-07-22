@@ -8,5 +8,6 @@ require('./beast-031.js');
 require('./beast-031-np-special.js');
 require('./beast-031-status-icons.js');
 require('./quinqux-quinquefolia.js');
+require('./quinqux-quinquefolia-fixes.js');
 
 module.exports = registry;
