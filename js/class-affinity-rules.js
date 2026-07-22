@@ -65,6 +65,9 @@
   const ACTIVE = (status) => Boolean(status) &&
     (status.remaining == null || status.remaining < 0 || status.remaining > 0) &&
     (status.uses == null || status.uses > 0);
+  const CUSTOM_FAVORABLE_MULTIPLIER = 1.5;
+  const BAPHOMET_CLASS_FAVORABLE_MULTIPLIER = 2;
+  const BAPHOMET_DEFENSE_DISADVANTAGE_MULTIPLIER = 2;
 
   function officialClassAffinity(attackerClass, defenderClass) {
     const attacker = String(attackerClass || '');
@@ -107,29 +110,50 @@
     return '';
   }
 
-  function customClassAffinity(engine, attacker, defender) {
+  function isBeastClass(classId) {
+    const value = String(classId || '');
+    return value === 'beast' || value.startsWith('beast');
+  }
+
+  function attackerCustomAffinity(engine, attacker, defender) {
     switch (affinityProfile(attacker)) {
       case 'rlyeh':
-        return unitHasTrait(engine, defender, 'ヒト科') || unitHasTrait(engine, defender, '今を生きる人類') ? 2 : 1;
+        return unitHasTrait(engine, defender, 'ヒト科') || unitHasTrait(engine, defender, '今を生きる人類')
+          ? CUSTOM_FAVORABLE_MULTIPLIER
+          : 1;
       case 'firstMurder': {
         const favorable = unitHasTrait(engine, defender, '人の力') || unitHasTrait(engine, defender, 'ヒト科');
-        if (favorable) return 2;
+        if (favorable) return CUSTOM_FAVORABLE_MULTIPLIER;
         const unfavorable = unitHasTrait(engine, defender, '天の力') || unitHasTrait(engine, defender, 'ヒト科以外');
         return unfavorable ? 0.5 : 1;
       }
-      case 'baphomet':
-        return hasClassSkill(engine, defender, '道具作成') ||
+      case 'baphomet': {
+        if (defender.classId === 'caster' || defender.classId === 'ruler') {
+          return BAPHOMET_CLASS_FAVORABLE_MULTIPLIER;
+        }
+        const favorable = hasClassSkill(engine, defender, '道具作成') ||
           hasClassSkill(engine, defender, '陣地作成') ||
-          unitHasTrait(engine, defender, '悪魔') ? 2 : 1;
+          unitHasTrait(engine, defender, '悪魔');
+        return favorable ? CUSTOM_FAVORABLE_MULTIPLIER : 1;
+      }
       default:
         return null;
     }
   }
 
+  function defenderCustomAffinity(attacker, defender) {
+    if (affinityProfile(defender) !== 'baphomet') return null;
+    return attacker.classId === 'avenger' || isBeastClass(attacker.classId)
+      ? BAPHOMET_DEFENSE_DISADVANTAGE_MULTIPLIER
+      : null;
+  }
+
   function resolveAttackClassAffinity(engine, attacker, defender) {
     if (!attacker || !defender) return 1;
-    const custom = customClassAffinity(engine, attacker, defender);
-    return custom == null ? officialClassAffinity(attacker.classId, defender.classId) : custom;
+    const defenseAffinity = defenderCustomAffinity(attacker, defender);
+    if (defenseAffinity != null) return defenseAffinity;
+    const attackAffinity = attackerCustomAffinity(engine, attacker, defender);
+    return attackAffinity == null ? officialClassAffinity(attacker.classId, defender.classId) : attackAffinity;
   }
 
   const HALF_TARGETS = {
@@ -147,7 +171,7 @@
     const value = Number(multiplier || 1);
     if (Math.abs(value - 1) < 1e-9) return { actorClass: sourceClass, targetClass: 'shielder' };
     if (Math.abs(value - 2) < 1e-9) {
-      if (sourceClass === 'berserker' || sourceClass === 'shielder' || sourceClass.startsWith('beast')) {
+      if (sourceClass === 'berserker' || sourceClass === 'shielder' || isBeastClass(sourceClass)) {
         return { actorClass: 'saber', targetClass: 'lancer' };
       }
       return { actorClass: sourceClass, targetClass: 'berserker' };
@@ -175,13 +199,22 @@
     const represented = representedClasses(actor.classId, multiplier);
     const actorClass = actor.classId;
     const defenderClass = defender.classId;
+    const actorServantId = actor.servantId;
+    const hadAffinityProfile = Object.prototype.hasOwnProperty.call(actor, 'classAffinityProfile');
+    const actorAffinityProfile = actor.classAffinityProfile;
+
     actor.classId = represented.actorClass;
     defender.classId = represented.targetClass;
+    actor.servantId = '__class_affinity_resolved__';
+    actor.classAffinityProfile = 'resolved';
     try {
       return callback();
     } finally {
       actor.classId = actorClass;
       defender.classId = defenderClass;
+      actor.servantId = actorServantId;
+      if (hadAffinityProfile) actor.classAffinityProfile = actorAffinityProfile;
+      else delete actor.classAffinityProfile;
     }
   }
 
@@ -224,7 +257,11 @@
     affinityProfile,
     unitHasTrait,
     hasClassSkill,
-    favorableMultiplier: 2,
+    isBeastClass,
+    representedClasses,
+    conditionalFavorableMultiplier: CUSTOM_FAVORABLE_MULTIPLIER,
+    baphometClassFavorableMultiplier: BAPHOMET_CLASS_FAVORABLE_MULTIPLIER,
+    baphometDefenseDisadvantageMultiplier: BAPHOMET_DEFENSE_DISADVANTAGE_MULTIPLIER,
     unfavorableMultiplier: 0.5,
     neutralMultiplier: 1,
     overlapPriority: 'favorable-first'
