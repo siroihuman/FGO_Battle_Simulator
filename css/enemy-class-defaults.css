@@ -1,0 +1,87 @@
+.enemy-class-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(130, 165, 210, 0.24);
+  border-radius: 10px;
+  background: rgba(12, 24, 42, 0.45);
+}
+
+.enemy-class-toggle-row .toggle-label {
+  min-width: 0;
+}
+
+.enemy-class-default-note {
+  margin: 0;
+  padding: 7px 10px;
+  border-left: 3px solid rgba(110, 170, 235, 0.72);
+  color: rgba(220, 234, 250, 0.82);
+  font-size: 12px;
+  line-height: 1.5;
+  background: rgba(10, 22, 38, 0.38);
+}
+
+.enemy-setup-card input:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  background: rgba(48, 60, 76, 0.7);
+}
+
+.enemy-charge-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 7px 0 5px;
+  padding: 5px 8px;
+  border: 1px solid rgba(245, 213, 102, 0.42);
+  border-radius: 8px;
+  background: rgba(42, 34, 12, 0.46);
+  color: #ffe58a;
+  line-height: 1;
+}
+
+.enemy-charge-line span {
+  color: rgba(255, 245, 205, 0.78);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.enemy-charge-line strong {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
+}
+
+.enemy-charge-line small {
+  color: rgba(255, 245, 205, 0.7);
+  font-size: 10px;
+}
+
+.enemy-charge-line.disabled {
+  border-color: rgba(150, 160, 175, 0.3);
+  background: rgba(25, 29, 35, 0.54);
+  color: rgba(200, 208, 220, 0.72);
+}
+
+@media (max-width: 700px) {
+  .enemy-class-toggle-row {
+    gap: 7px 10px;
+  }
+
+  .enemy-class-toggle-row .toggle-label {
+    flex: 1 1 140px;
+  }
+
+  .enemy-charge-line {
+    gap: 5px;
+    padding: 5px 6px;
+  }
+
+  .enemy-charge-line strong {
+    font-size: 11px;
+  }
+}
