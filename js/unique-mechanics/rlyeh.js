@@ -32,13 +32,15 @@
     cardBoost: 'rlyehCardPerformanceBoost',
     sleepContract: 'rlyehPermanentSleepContract',
     permanentSleep: 'rlyehPermanentSleep',
-    deathRelay: 'rlyehInstantDeathNpRelay'
+    deathRelay: 'rlyehInstantDeathNpRelay',
+    buffAbsorb: 'rlyehBuffAbsorbOnInstantDeath'
   };
   const STATUS_NAMES = {
     [TYPES.cardBoost]: 'カード性能アップブースト',
     [TYPES.sleepContract]: 'ターン終了時・強化解除／永久睡眠',
     [TYPES.permanentSleep]: '永久睡眠',
-    [TYPES.deathRelay]: '即死時・味方全体NP増加'
+    [TYPES.deathRelay]: '即死時・味方全体NP増加',
+    [TYPES.buffAbsorb]: '即死成功時・対象の強化状態を吸収'
   };
   const BOOST_ICONS = {
     quick: 'Quickupboost.webp',
@@ -112,7 +114,10 @@
       return { success: false, reason: 'chance', chance, target };
     }
 
-    const buffs = isRlyeh(source) ? (target.statuses || []).filter(isRemovableBuff) : [];
+    const canAbsorb = Boolean(source && (source.statuses || []).some(
+      (status) => status.type === TYPES.buffAbsorb && isActive(status)
+    ));
+    const buffs = canAbsorb ? (target.statuses || []).filter(isRemovableBuff) : [];
     if (buffs.length) {
       target.statuses = target.statuses.filter((status) => !buffs.includes(status));
       buffs.forEach((status) => {
@@ -211,23 +216,6 @@
     }
   };
 
-  const originalCalculateAttackTotal = proto._calculateAttackTotal;
-  proto._calculateAttackTotal = function (actor, target, action, chainContext) {
-    if (!isRlyeh(actor) || !['ヒト科', '今を生きる人類'].some((trait) => hasTrait(this, target, trait))) {
-      return originalCalculateAttackTotal.call(this, actor, target, action, chainContext);
-    }
-    const actorClass = actor.classId;
-    const targetClass = target.classId;
-    actor.classId = 'saber';
-    target.classId = 'lancer';
-    try {
-      return originalCalculateAttackTotal.call(this, actor, target, action, chainContext);
-    } finally {
-      actor.classId = actorClass;
-      target.classId = targetClass;
-    }
-  };
-
   function applyGreatOldOne(engine, actor, target, level, card) {
     const index = Math.max(1, Math.min(10, Number(level || 10))) - 1;
     engine._addStatus(target, {
@@ -263,7 +251,7 @@
       if (actor && (actor.statuses || []).some((status) => status.type === TYPES.permanentSleep && isActive(status))) {
         return { ok: false, reason: '永久睡眠状態のためスキルを使用できません。' };
       }
-      return originalUseSkill.call(this, allyId, skillIndex, selectedTargetId);
+      return originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
     }
     if (this.state.phase !== 'command' || this.state.winner) return { ok: false, reason: '現在はスキルを使用できません。' };
     if (actor.cooldowns[skillIndex] > 0) return { ok: false, reason: `CTが${actor.cooldowns[skillIndex]}残っています。` };
@@ -339,14 +327,14 @@
     });
   };
 
-  Object.entries(STATUS_NAMES).forEach(([type, name]) => {
+  Object.entries(STATUS_NAMES).forEach(([type]) => {
     DATA.statusIcons[type] = DATA.statusIcons[type] || (type === TYPES.permanentSleep ? 'Stunstatus.webp' : 'Statusup.webp');
   });
 
   REGISTRY.register(SERVANT_ID, {
     name: 'ルルイエ',
     hooks: {},
-    notes: 'カード色選択、永久睡眠、即死時NP配布、即死成功時強化吸収、固有クラス相性を管理。'
+    notes: 'カード色選択、永久睡眠、即死時NP配布、即死成功時強化吸収を管理。クラス相性は共通システム側で処理する。'
   });
 
   const API = { servantId: SERVANT_ID, statusTypes: { ...TYPES }, boostValues: BOOST_VALUES.slice(), cardValues: CARD_VALUES.slice() };
