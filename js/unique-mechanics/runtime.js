@@ -68,16 +68,17 @@
   };
 
   const originalUseSkill = proto.useSkill;
-  proto.useSkill = function (allyId, skillIndex, selectedTargetId) {
+  proto.useSkill = function (allyId, skillIndex, selectedTargetId, selectedCardType) {
     const actor = this.getUnit(allyId);
     const skill = actor && actor.data && actor.data.skills ? actor.data.skills[skillIndex] : null;
-    const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId);
+    const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
     if (result && result.ok) {
       this._runUniqueMechanicProviders('afterSkillUse', {
         actor,
         skill,
         skillIndex,
         selectedTargetId,
+        selectedCardType,
         result
       });
     }
