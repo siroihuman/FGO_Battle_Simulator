@@ -32,7 +32,11 @@ test('data', 'No.031\'の基本データを登録', () => {
 
 test('demerit', '怨讐の畔は控えを含む味方全体の弱体耐性を15低下', () => {
   const e = engine([{ servantId: 'beast031' }, { servantId: 'fenrir' }, { servantId: 'koyanskayaLight' }, { servantId: 'skadiCaster' }]);
-  e.getState().allies.forEach((ally) => assert.strictEqual(e._statusTotal(ally, 'debuffResist'), -15));
+  e.getState().allies.forEach((ally) => {
+    const demerit = ally.statuses.find((status) => status.type === 'debuffResist' && status.source === '怨讐の畔 EX');
+    assert.ok(demerit);
+    assert.strictEqual(demerit.value, -15);
+  });
 });
 
 test('skill2', '永劫の罪過は叛逆する者からNP25を吸収しターン終了時に還元', () => {
