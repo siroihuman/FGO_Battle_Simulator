@@ -53,6 +53,28 @@ replace('js/app.js', """    root.querySelectorAll('[data-target]').forEach((butt
       };
     });""")
 
+replace('js/servants-rlyeh.js', "{ type: 'cooldownReduce', target: 'allOtherAllies', value: 1 },\n          { type: 'hpLoss', target: 'allOtherAllies', value: 2000 }", "{ type: 'cooldownReduce', target: 'allAlliesExceptSelected', value: 1 },\n          { type: 'hpLoss', target: 'allAlliesExceptSelected', value: 2000 }")
+
+replace('js/unique-mechanics/rlyeh.js', """  const originalApplyEffect = proto._applyEffect;
+  proto._applyEffect = function (effect, source, selectedTargetId, context) {""", """  const originalEffectTargets = proto._effectTargets;
+  proto._effectTargets = function (effect, source, selectedTargetId) {
+    if (effect && effect.target === 'allAlliesExceptSelected') {
+      return this.getAliveAllies().filter((unit) => unit.id !== selectedTargetId);
+    }
+    return originalEffectTargets.call(this, effect, source, selectedTargetId);
+  };
+
+  const originalApplyEffect = proto._applyEffect;
+  proto._applyEffect = function (effect, source, selectedTargetId, context) {""")
+
+replace('tests/rlyeh-tests.js', """  assert.strictEqual(e.useSkill(rlyeh.id, 2, target.id, 'quick').ok, true);
+  assert.strictEqual(target.statuses.find((s) => s.type === RLYEH.statusTypes.cardBoost).statusIcon, 'Quickupboost.webp');
+  assert.strictEqual(e._statusTotal(target, 'cardUp', { card: 'quick' }), 100);""", """  const before = e._statusTotal(target, 'cardUp', { card: 'quick' });
+  assert.strictEqual(e.useSkill(rlyeh.id, 2, target.id, 'quick').ok, true);
+  assert.strictEqual(target.statuses.find((s) => s.type === RLYEH.statusTypes.cardBoost).statusIcon, 'Quickupboost.webp');
+  const rawAfter = before + 50;
+  assert.strictEqual(e._statusTotal(target, 'cardUp', { card: 'quick' }), rawAfter * 2);""")
+
 p = Path('tests/engine-tests.js')
 text = p.read_text()
 text = text.replace("test('実装サーヴァントは12騎'", "test('実装サーヴァントは13騎'", 1)
