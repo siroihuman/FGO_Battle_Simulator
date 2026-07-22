@@ -1,0 +1,25 @@
+name: Temporary enemy turn regression
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Syntax check
+        run: |
+          node --check js/enemy-turn-charge-reserve-status.js
+          node --check tests/enemy-turn-charge-reserve-status-tests.js
+      - name: Enemy charge and reserve duration tests
+        run: node tests/enemy-turn-charge-reserve-status-tests.js
+      - name: Existing enemy defaults tests
+        run: |
+          node tests/enemy-class-defaults-tests.js
+          node tests/enemy-action-defaults-tests.js
