@@ -11,6 +11,7 @@ require('../js/trigger-lifecycle-effects.js');
 require('../js/np-card-trigger-removal-effects.js');
 require('../js/order-change-position.js');
 const RLYEH = require('../js/unique-mechanics/rlyeh.js');
+require('../js/unique-mechanics/runtime.js');
 
 function enemy(overrides = {}) {
   return { enabled: true, name: '対象', classId: 'archer', attribute: 'sky', traits: ['ヒト科'], hp: 1000000, attack: 1, dtdr: 1, deathRate: 100, chargeMax: 9, critRate: 0, ...overrides };
@@ -25,7 +26,7 @@ function test(name, callback) {
   catch (error) { console.error(`✗ ${name}`); throw error; }
 }
 
-test('ルルイエの基本データを登録', () => {
+test('ルルイエの基本データと指定アイコンを登録', () => {
   const servant = DATA.servants.rlyeh;
   assert.strictEqual(servant.no, "024'");
   assert.strictEqual(servant.classId, 'beast');
@@ -33,6 +34,11 @@ test('ルルイエの基本データを登録', () => {
   assert.deepStrictEqual(servant.hits, { quick: 3, arts: 4, buster: 4, extra: 6, np: 4 });
   assert.strictEqual(servant.na, 0.39);
   assert.strictEqual(servant.skills.length, 3);
+  assert.deepStrictEqual(servant.skillIcons, [
+    'skill-general-030.png', 'skill-general-010.png', 'skill-unique-018.png'
+  ]);
+  assert.strictEqual(servant.passives.find((passive) => passive.name === '領域外の生命 EX').icon, 'class-general-013.png');
+  assert.strictEqual(servant.passives.find((passive) => passive.name === '絶海にて微睡む太古の支配者').icon, 'skill-general-084.png');
 });
 
 test('呼応する悪夢は選択対象CT2・他味方CT1とHP2000減少', () => {
@@ -50,6 +56,15 @@ test('呼応する悪夢は選択対象CT2・他味方CT1とHP2000減少', () =>
   assert.deepStrictEqual(other.cooldowns, [4,4,4]);
   assert.strictEqual(other.hp, hp - 2000);
   assert.strictEqual(selected.statuses.find((s) => s.type === 'buffRemovalResist').value, 100);
+});
+
+test('画面経由と同じ4引数呼び出しでも古の支配者が発動する', () => {
+  const e = engine([{ servantId: 'rlyeh', skillLevel: 10 }, { servantId: 'fenrir', skillLevel: 10 }]);
+  const [rlyeh, target] = e.getState().allies;
+  const result = e.useSkill(rlyeh.id, 2, target.id, 'buster');
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.card, 'buster');
+  assert.strictEqual(target.statuses.some((status) => status.type === RLYEH.statusTypes.cardBoost && status.card === 'buster'), true);
 });
 
 test('古の支配者は選択色ブーストを付与しターン終了時に永久睡眠へ移行', () => {
@@ -88,10 +103,14 @@ test('味方が即死した際に自身以外の味方へNP50を配布', () => {
   assert.strictEqual(other.np, 50);
 });
 
-test('ルルイエの即死成功時に対象の解除可能な強化を吸収', () => {
+test('クラススキルで即死成功時強化吸収状態が可視化され、効果も発動する', () => {
   const e = engine([{ servantId: 'rlyeh' }], enemy({ deathRate: 100 }));
   e.rng = () => 0;
   const rlyeh = e.getState().allies[0];
+  const absorb = rlyeh.statuses.find((status) => status.type === RLYEH.statusTypes.buffAbsorb);
+  assert.ok(absorb);
+  assert.strictEqual(absorb.passive, true);
+  assert.strictEqual(e.getStatusSummary(rlyeh.id).find((status) => status.type === RLYEH.statusTypes.buffAbsorb).name, '即死成功時・対象の強化状態を吸収');
   const target = e.getState().enemies[0];
   target.statuses.push({ type: 'attackUp', value: 30, remaining: 3, uses: null, debuff: false, passive: false });
   const result = e._resolveRlyehInstantDeath(rlyeh, target, 150);
