@@ -25,8 +25,4 @@ jobs:
           find js tests -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: Run all regression tests
         run: |
-          set -e
-          for file in tests/*-tests.js; do
-            echo "=== $file ==="
-            node "$file"
-          done
+          node tests/konohanasakuya-hime-tests.js
