@@ -78,14 +78,12 @@
 
   global.FGO_SIM_DATA = DATA;
 
-  // Node.jsではdata.jsをrequireするだけで、分割データと常時適用システムも自動登録します。
+  // Node.jsでは基幹データを自動登録し、追加分割サーヴァントは各テスト・利用箇所で明示読込します。
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = DATA;
     require('./servants.js');
     require('./servants-dominion-foreigner.js');
     require('./servants-rlyeh.js');
-    require('./servants-sen-no-rikyu.js');
-    require('./servants-beast-031.js');
     require('./craft-essences.js');
     require('./mystic-codes.js');
     require('./class-score.js');
