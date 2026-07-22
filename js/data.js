@@ -83,6 +83,7 @@
     module.exports = DATA;
     require('./servants.js');
     require('./servants-dominion-foreigner.js');
+    require('./servants-rlyeh.js');
     require('./craft-essences.js');
     require('./mystic-codes.js');
     require('./class-score.js');
