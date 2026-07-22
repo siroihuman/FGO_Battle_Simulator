@@ -74,6 +74,7 @@ replace('tests/rlyeh-tests.js', """  assert.strictEqual(e.useSkill(rlyeh.id, 2, 
   assert.strictEqual(target.statuses.find((s) => s.type === RLYEH.statusTypes.cardBoost).statusIcon, 'Quickupboost.webp');
   const rawAfter = before + 50;
   assert.strictEqual(e._statusTotal(target, 'cardUp', { card: 'quick' }), rawAfter * 2);""")
+replace('tests/rlyeh-tests.js', "assert.strictEqual(target.statuses.some((s) => s.type === 'cardUp'), false);", "assert.strictEqual(target.statuses.some((s) => s.type === 'cardUp' && !s.passive), false);")
 
 p = Path('tests/engine-tests.js')
 text = p.read_text()
