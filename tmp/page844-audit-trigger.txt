@@ -1,1 +1,1 @@
-temporary trigger for page 844 audit
+trigger Baphomet implementation
