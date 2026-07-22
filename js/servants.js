@@ -236,7 +236,7 @@
         skillIcons: [
           'skill-np-charge.png',
           'skill-special-attack.png',
-          'skill-buster-star-weight.png'
+          'skill-buster-up.png'
         ],
         skills: [
           {
@@ -289,7 +289,7 @@
           { name: '単独行動 EX', icon: 'class-independent-action.png', effects: [{ type: 'critUp', value: 12 }] },
           { name: '単独顕現 C', icon: 'class-independent-action.png', effects: [{ type: 'critUp', value: 6 }, { type: 'deathResist', value: 6 }, { type: 'mentalResist', value: 6 }] },
           { name: '変化 A', icon: 'skill-arts-up.png', effects: [{ type: 'cardUp', card: 'arts', value: 10 }, { type: 'starRateUp', value: 10 }] },
-          { name: '女神変生（銃） B', icon: 'class-divinity.png', effects: [{ type: 'npPowerUp', value: 20 }] }
+          { name: '女神変生（銃） B', icon: 'skill-general-051.png', effects: [{ type: 'npPowerUp', value: 20 }] }
         ],
         np: {
           id: 'izTulaSevenDrive',
@@ -486,7 +486,7 @@
           { name: '対魔力 A', icon: 'class-magic-resistance.png', effects: [{ type: 'debuffResist', value: 20 }] },
           { name: '陣地作成 EX', icon: 'class-territory-creation.png', effects: [{ type: 'cardUp', card: 'arts', value: 12 }] },
           { name: '独自魔術 B', icon: 'skill-crit-up.png', effects: [{ type: 'cardCritUp', card: 'arts', value: 10 }] },
-          { name: '妖精眼 A', icon: 'class-magic-resistance.png', effects: [{ type: 'critRateResist', value: 20 }] }
+          { name: '妖精眼 A', icon: 'skill-general-029.png', effects: [{ type: 'critRateResist', value: 20 }] }
         ],
         np: {
           id: 'aroundCaliburn',
@@ -583,7 +583,7 @@
         passives: [
           { name: '対魔力 EX', icon: 'class-magic-resistance.png', effects: [{ type: 'debuffResist', value: 25 }] },
           { name: '陣地作成 A', icon: 'class-territory-creation.png', effects: [{ type: 'cardUp', card: 'arts', value: 10 }] },
-          { name: '女神の神核 A', icon: 'class-divinity.png', effects: [{ type: 'damagePlus', value: 250 }, { type: 'debuffResist', value: 25 }] }
+          { name: '女神の神核 A', icon: 'class-general-003.png', effects: [{ type: 'damagePlus', value: 250 }, { type: 'debuffResist', value: 25 }] }
         ],
         np: {
           id: 'aegirGate',
@@ -638,7 +638,7 @@
         deathRate: 30.0,
         skillIcons: [
           'skill-quick-up.png',
-          'skill-defense-up.png',
+          'skill-general-094.png',
           'skill-np-charge.png'
         ],
         skills: [
@@ -680,7 +680,7 @@
         passives: [
           { name: '陣地作成 EX', icon: 'class-territory-creation.png', effects: [{ type: 'cardUp', card: 'arts', value: 12 }] },
           { name: '道具作成 A', icon: 'class-item-construction.png', effects: [{ type: 'debuffSuccess', value: 10 }] },
-          { name: '女神の神核 A', icon: 'class-divinity.png', effects: [{ type: 'damagePlus', value: 250 }, { type: 'debuffResist', value: 25 }] }
+          { name: '女神の神核 A', icon: 'class-general-003.png', effects: [{ type: 'damagePlus', value: 250 }, { type: 'debuffResist', value: 25 }] }
         ],
         np: {
           id: 'skyGate',
