@@ -23,6 +23,13 @@
   const LEGACY_SKILL_ONE_SEAL = 'quinquxSkillOneSeal';
   const CONDITIONAL_POWER = 'quinquxUnbuffedOrLoserPower';
   const MASK_NP_VALUES = [30,32,34,36,38,40,42,44,46,50];
+  const SKILL_SEAL_ICON = 'Skillseal.webp';
+
+  if (DATA.statusIcons) {
+    DATA.statusIcons.skillDisable = SKILL_SEAL_ICON;
+    DATA.statusIcons.skill1Seal = SKILL_SEAL_ICON;
+    DATA.statusIcons.skillSeal = SKILL_SEAL_ICON;
+  }
 
   const isActive = (status) => Boolean(status) &&
     (status.remaining == null || status.remaining < 0 || status.remaining > 0) &&
@@ -55,6 +62,7 @@
   const originalUseSkill = proto.useSkill;
   proto.useSkill = function (allyId, skillIndex, selectedTargetId, selectedCardType) {
     const actor = this.getUnit(allyId);
+    const transformedActor = isTransformed(actor);
     const skill = actor && actor.data && actor.data.skills && actor.data.skills[skillIndex];
     const isMask = Boolean(actor && actor.servantId === SERVANT_ID && skill && skill.id === 'maskBelongingToNoOne');
     const target = isMask
@@ -68,14 +76,22 @@
     const level = actor ? Math.max(1, Math.min(10, Number(actor.skillLevels[skillIndex] || 10))) : 10;
 
     const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
+
+    // 変貌中に使用したスキルのCTは、クインクス側のスキルCTとして記録する。
+    if (transformedActor && result && result.ok && actor) {
+      if (!actor.__quinquxUsedSkillCooldowns) actor.__quinquxUsedSkillCooldowns = {};
+      actor.__quinquxUsedSkillCooldowns[skillIndex] = Number(actor.cooldowns[skillIndex] || 0);
+    }
+
     if (!isMask || !result || !result.ok || !target) return result;
 
     // 基礎実装が使用者へ加算したNPを戻し、変貌対象へ付与する。
     actor.np = actorNpBefore;
     this._addNp(target, MASK_NP_VALUES[level - 1], true);
 
-    // 換装後も使用済みスキルのCTをそのまま保持する。
+    // 換装直後は変貌前のCTを維持する。
     target.cooldowns = cooldownsBefore.slice();
+    target.__quinquxUsedSkillCooldowns = {};
 
     // スキル本体だけでなく表示用アイコンもクインクス側へ同期する。
     target.data.skillIcons = Array.isArray(actor.data.skillIcons)
@@ -98,14 +114,14 @@
       debuff: true,
       chance: 100,
       unremovable: true,
-      statusIcon: 'Skillseal.webp'
+      statusIcon: SKILL_SEAL_ICON
     }, actor, target.id, { level: actor.skillLevels[skillIndex] });
 
     const applied = (target.statuses || []).slice(beforeCount).find((status) => status.type === 'skillDisable') ||
       (target.statuses || []).slice().reverse().find((status) => status.type === 'skillDisable' && Number(status.skillNumber) === 1);
     if (applied) {
       applied.skillNumber = 1;
-      applied.statusIcon = 'Skillseal.webp';
+      applied.statusIcon = SKILL_SEAL_ICON;
       applied.unremovable = true;
     }
     return result;
@@ -113,8 +129,20 @@
 
   const originalFinishTurn = proto._finishTurn;
   proto._finishTurn = function () {
+    const transformedCooldowns = this.state.allies.map((unit) => ({
+      unit,
+      used: { ...(unit.__quinquxUsedSkillCooldowns || {}) }
+    }));
+
     const result = originalFinishTurn.apply(this, arguments);
-    this.state.allies.forEach((unit) => {
+
+    transformedCooldowns.forEach(({ unit, used }) => {
+      Object.keys(used).forEach((indexText) => {
+        const index = Number(indexText);
+        unit.cooldowns[index] = Math.max(0, Number(used[indexText] || 0) - 1);
+      });
+      delete unit.__quinquxUsedSkillCooldowns;
+
       if (unit.__quinquxOriginalClassId == null) return;
       unit.classId = unit.__quinquxOriginalClassId;
       if (unit.data) unit.data.classId = unit.__quinquxOriginalClassId;
@@ -127,6 +155,7 @@
     servantId: SERVANT_ID,
     transformedType: TRANSFORMED,
     skillDisableType: 'skillDisable',
+    skillSealIcon: SKILL_SEAL_ICON,
     maskNpValues: MASK_NP_VALUES.slice()
   };
   global.FGO_SIM_QUINQUX_FIXES = API;
