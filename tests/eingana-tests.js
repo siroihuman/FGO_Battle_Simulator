@@ -121,10 +121,14 @@ function makeEngine() {
     statusIcon: 'Maxhpup.webp'
   }, amount, 'test'));
   actor.np = 0;
-  engine._finishTurn();
-  assert.ok(actor.statuses.some((status) => status.type === 'deathEvasion'), '30000以上で致死ダメージ回避を付与');
+  actor.hp = 100;
+  engine.getAliveEnemies()[0].attack = 1000000;
+  engine._performEnemyTurn();
+  assert.strictEqual(actor.alive, true, '味方ターン終了時に付与された致死ダメージ回避が敵攻撃中に有効');
+  assert.ok(!actor.statuses.some((status) => status.type === 'deathEvasion'), '致死ダメージ回避は敵ターン終了時に消滅');
   assert.strictEqual(actor.np, 20, '60000以上でNP20増加');
-  assert.ok(actor.statuses.some((status) => status.type === 'npPowerUp' && status.value === 100), '90000以上で宝具威力100%アップ');
+  assert.ok(!actor.statuses.some((status) => status.type === 'npPowerUp'), '1T宝具威力アップは敵ターン終了時に消滅');
+  assert.ok(engine.getState().logs.some((entry) => entry.message.includes('最大HP増加量90000以上')), '90000以上で宝具威力アップを付与したログを記録');
 }
 
 {
