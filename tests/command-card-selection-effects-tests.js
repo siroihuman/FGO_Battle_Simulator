@@ -214,7 +214,7 @@ test('Issue #53の共通APIを公開する', () => {
   assert.ok(EFFECTS.incapacitatedTypes.includes('petrification'));
   assert.ok(EFFECTS.commandCardDrawSealTypes.includes('commandCardDrawSeal'));
   assert.strictEqual(EFFECTS.effectIncludesReserve({ target: 'allAlliesIncludingReserve' }), true);
-  assert.strictEqual(DATA.version, '1.13.0');
+  assert.strictEqual(DATA.version, '1.13.1');
 });
 
 console.log('\nIssue #53 共通行動処理テストに合格しました。');
