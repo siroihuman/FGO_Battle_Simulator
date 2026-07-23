@@ -24,34 +24,7 @@
     'konohanaCommandCardSeal'
   ]);
 
-  const INCAPACITATED_TYPES = new Set([
-    'stun',
-    'charm',
-    'sleep',
-    'permanentSleep',
-    'petrify',
-    'petrification',
-    'freeze',
-    'frozen',
-    'actionDisable',
-    'actionIncapacitated',
-    'unableToAct',
-    'immobilize'
-  ]);
-
   const STATUS_NAMES = {
-    stun: 'スタン',
-    charm: '魅了',
-    sleep: '睡眠',
-    permanentSleep: '永久睡眠',
-    petrify: '石化',
-    petrification: '石化',
-    freeze: '凍結',
-    frozen: '凍結',
-    actionDisable: '行動不能',
-    actionIncapacitated: '行動不能',
-    unableToAct: '行動不能',
-    immobilize: '行動不能',
     commandCardSeal: 'コマンドカード選出不能',
     commandCardDrawSeal: 'コマンドカード選出不能',
     commandCardSelectionDisable: 'コマンドカード選出不能',
@@ -62,9 +35,6 @@
     COMMAND_CARD_DRAW_SEAL_TYPES.forEach((type) => {
       DATA.statusIcons[type] = DATA.statusIcons[type] || 'Commandcardsseal.webp';
     });
-    INCAPACITATED_TYPES.forEach((type) => {
-      DATA.statusIcons[type] = DATA.statusIcons[type] || 'Stunstatus.webp';
-    });
   }
 
   function isActive(status) {
@@ -73,29 +43,10 @@
       (status.uses == null || status.uses > 0);
   }
 
-  function hasStatusType(unit, types) {
-    return Boolean(unit) && (unit.statuses || []).some((status) => types.has(status.type) && isActive(status));
-  }
-
   function rawCommandCardDrawSealStatus(unit) {
     return unit && (unit.statuses || []).find((status) =>
       COMMAND_CARD_DRAW_SEAL_TYPES.has(status.type) && isActive(status)
     ) || null;
-  }
-
-  function incapacitatingStatus(unit) {
-    return unit && (unit.statuses || []).find((status) =>
-      isActive(status) && (
-        INCAPACITATED_TYPES.has(status.type) ||
-        status.incapacitated === true ||
-        status.actionDisabled === true ||
-        status.preventsAction === true
-      )
-    ) || null;
-  }
-
-  function isIncapacitated(unit) {
-    return Boolean(incapacitatingStatus(unit));
   }
 
   function livingFrontline(engine) {
@@ -151,15 +102,6 @@
   proto.isCommandCardDrawSealed = function (unitOrId) {
     const unit = unitOrId && typeof unitOrId === 'object' ? unitOrId : this.getUnit(unitOrId);
     return isCommandCardDrawSealed(unit, this);
-  };
-
-  proto.getIncapacitatingStatus = function (unitOrId) {
-    const unit = unitOrId && typeof unitOrId === 'object' ? unitOrId : this.getUnit(unitOrId);
-    return incapacitatingStatus(unit);
-  };
-
-  proto.isIncapacitated = function (unitOrId) {
-    return Boolean(this.getIncapacitatingStatus(unitOrId));
   };
 
   proto.effectIncludesReserve = function (effect) {
@@ -282,82 +224,6 @@
     return result;
   };
 
-  const originalRunEffectHooks = proto._runEffectHooks;
-  proto._runEffectHooks = function (eventName, context) {
-    const detail = context || {};
-    if (eventName === 'beforeEnemyAction' && detail.actor) {
-      const status = incapacitatingStatus(detail.actor);
-      if (status) {
-        const label = status.label || STATUS_NAMES[status.type] || '行動不能';
-        this._log(`${detail.actor.name}は${label}により行動できない。`, 'debuff');
-        return { prevented: true, status };
-      }
-    }
-    return originalRunEffectHooks.call(this, eventName, detail);
-  };
-
-  const originalExecuteCard = proto._executeCard;
-  proto._executeCard = function (action, chainContext) {
-    const actor = action && this.getUnit(action.actorId);
-    const status = incapacitatingStatus(actor);
-    if (actor && status) {
-      const label = status.label || STATUS_NAMES[status.type] || '行動不能';
-      this._log(`${actor.name}は${label}のため、コマンドカードによる攻撃を行えない。`, 'chainError');
-      return { skipped: true, reason: 'incapacitated', status };
-    }
-    return originalExecuteCard.call(this, action, chainContext);
-  };
-
-  const originalExecuteNp = proto._executeNp;
-  proto._executeNp = function (action, chainContext, precedingNps) {
-    const actor = action && this.getUnit(action.actorId);
-    const status = incapacitatingStatus(actor);
-    if (actor && status) {
-      const label = status.label || STATUS_NAMES[status.type] || '行動不能';
-      this._log(`${actor.name}は${label}のため、宝具を使用できない。`, 'chainError');
-      return { skipped: true, reason: 'incapacitated', status };
-    }
-    return originalExecuteNp.call(this, action, chainContext, precedingNps);
-  };
-
-  const originalExecuteExtra = proto._executeExtra;
-  proto._executeExtra = function () {
-    if (this.__incapacitatedChainError) return { skipped: true, reason: 'chainError' };
-    return originalExecuteExtra.apply(this, arguments);
-  };
-
-  const originalCalculateOc = proto._calculateOc;
-  proto._calculateOc = function (actor, precedingNps) {
-    return originalCalculateOc.call(this, actor, this.__incapacitatedChainError ? 0 : precedingNps);
-  };
-
-  const originalExecuteCommandChain = proto.executeCommandChain;
-  proto.executeCommandChain = function () {
-    const actions = this.state && Array.isArray(this.state.selectedActions)
-      ? this.state.selectedActions
-      : [];
-    const hasIncapacitatedParticipant = actions.length === 3 && actions.some((action) => {
-      const actor = action && this.getUnit(action.actorId);
-      return actor && isIncapacitated(actor);
-    });
-
-    if (!hasIncapacitatedParticipant) return originalExecuteCommandChain.apply(this, arguments);
-
-    const originalCards = actions.map((action) => action.card);
-    actions.forEach((action) => { action.card = 'chainError'; });
-    this.__incapacitatedChainError = true;
-    this._log(
-      '行動不能状態のサーヴァントを含むためチェインエラー。チェイン・1stボーナス・OC上昇・Extra Attackは発生しない。',
-      'chainError'
-    );
-    try {
-      return originalExecuteCommandChain.apply(this, arguments);
-    } finally {
-      actions.forEach((action, index) => { action.card = originalCards[index]; });
-      this.__incapacitatedChainError = false;
-    }
-  };
-
   const originalGetStatusSummary = proto.getStatusSummary;
   proto.getStatusSummary = function (unitId) {
     return originalGetStatusSummary.call(this, unitId).map((status) => ({
@@ -369,7 +235,6 @@
 
   const API = {
     commandCardDrawSealTypes: Array.from(COMMAND_CARD_DRAW_SEAL_TYPES),
-    incapacitatedTypes: Array.from(INCAPACITATED_TYPES),
     statusNames: { ...STATUS_NAMES },
     targetScope: {
       defaultAllyScope: 'frontline',
@@ -378,8 +243,6 @@
     },
     isActive,
     isCommandCardDrawSealed,
-    isIncapacitated,
-    incapacitatingStatus,
     effectIncludesReserve,
     livingAllies
   };
