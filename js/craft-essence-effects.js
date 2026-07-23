@@ -9,6 +9,42 @@
   }
 
   const BattleEngine = ENGINE.BattleEngine;
+  const BUFF_REMOVAL_EFFECT_TYPES = new Set(['buffClear', 'defenseBuffClear']);
+
+  function isCraftEssenceStatus(status) {
+    return Boolean(status && status.sourceType === 'craftEssence');
+  }
+
+  const originalApplyEffect = BattleEngine.prototype._applyEffect;
+
+  BattleEngine.prototype._applyEffect = function (effect, source, selectedTargetId, context) {
+    if (!effect || !BUFF_REMOVAL_EFFECT_TYPES.has(effect.type)) {
+      return originalApplyEffect.call(this, effect, source, selectedTargetId, context);
+    }
+
+    const protectedStatuses = [];
+    const targets = typeof this._effectTargets === 'function'
+      ? this._effectTargets(effect, source, selectedTargetId)
+      : [];
+
+    targets.forEach((target) => {
+      (target.statuses || [])
+        .filter(isCraftEssenceStatus)
+        .forEach((status) => {
+          protectedStatuses.push({ status, passive: status.passive });
+          status.passive = true;
+        });
+    });
+
+    try {
+      return originalApplyEffect.call(this, effect, source, selectedTargetId, context);
+    } finally {
+      protectedStatuses.forEach(({ status, passive }) => {
+        status.passive = passive;
+      });
+    }
+  };
+
   const originalFinishTurn = BattleEngine.prototype._finishTurn;
 
   BattleEngine.prototype._finishTurn = function () {
@@ -35,7 +71,14 @@
     return originalFinishTurn.call(this);
   };
 
+  const API = {
+    BattleEngine,
+    buffRemovalEffectTypes: Array.from(BUFF_REMOVAL_EFFECT_TYPES),
+    isCraftEssenceStatus
+  };
+
+  global.FGO_SIM_CRAFT_ESSENCE_EFFECTS = API;
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { BattleEngine };
+    module.exports = API;
   }
 })(typeof window !== 'undefined' ? window : globalThis);
