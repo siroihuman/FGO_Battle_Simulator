@@ -161,7 +161,7 @@ function forcedCard(actor, index, card = 'arts') {
 
   assert.ok(!source.includes('FGO_SIM_COMMAND_CARD_SELECTION_EFFECTS'), '固有側のカード選出処理へ依存しない');
   assert.ok(source.includes("'rlyehPermanentSleep'"));
-  assert.ok(source.includes(".command-card[data-card]"));
+  assert.ok(source.includes('.command-card[data-card]'));
   assert.ok(source.includes("button.classList.toggle('command-incapacitated'"));
   assert.ok(lockSource.includes('proto.getSkillAvailability'));
   assert.ok(lockSource.includes('proto.getNpAvailability'));
@@ -187,5 +187,5 @@ assert.strictEqual(INCAPACITATION.executionStillBlocked, true);
 assert.strictEqual(COMMAND_LOCKS.normalCommandCardsSelectable, true);
 assert.strictEqual(COMMAND_LOCKS.skillsLocked, true);
 assert.strictEqual(COMMAND_LOCKS.noblePhantasmsLocked, true);
-assert.strictEqual(DATA.version, '1.13.3');
+assert.strictEqual(DATA.version, '1.14.0');
 console.log('\n永久睡眠・行動不能コマンド処理テストに合格しました。');
