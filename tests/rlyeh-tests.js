@@ -149,7 +149,7 @@ test('行動不能時のスキル・宝具ロックAPIを公開する', () => {
   assert.strictEqual(COMMAND_LOCKS.skillsLocked, true);
   assert.strictEqual(COMMAND_LOCKS.noblePhantasmsLocked, true);
   assert.strictEqual(COMMAND_LOCKS.normalCommandCardsSelectable, true);
-  assert.strictEqual(DATA.version, '1.13.3');
+  assert.strictEqual(DATA.version, '1.14.0');
 });
 
 test('味方が即死した際に自身以外の味方へNP50を配布', () => {
