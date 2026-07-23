@@ -191,7 +191,7 @@
         if (!existing) {
           engine._addStatus(unit, {
             type: 'deathEvasion',
-            duration: 2,
+            duration: 1,
             uses: 1,
             statusIcon: 'DeathEvasion.webp'
           }, 1, status.source || '創造 EX');
@@ -205,7 +205,7 @@
       if (increase >= 90000) {
         engine._addStatus(unit, {
           type: 'npPowerUp',
-          duration: 2,
+          duration: 1,
           statusIcon: 'Nppowerup.webp'
         }, 100, status.source || '創造 EX');
         engine._log(`${unit.name}は最大HP増加量90000以上により宝具威力が超絶アップ。`, 'buff');
@@ -213,10 +213,16 @@
     });
   }
 
+  const originalPerformEnemyTurn = proto._performEnemyTurn;
+  proto._performEnemyTurn = function () {
+    // 味方側の「ターン終了時」は味方攻撃終了後、敵攻撃開始前に処理する。
+    // ここで付与した1T状態は敵ターン中のみ有効で、敵ターン終了時に消滅する。
+    this.state.allies.forEach((unit) => applyTurnEndEffects(this, unit));
+    return originalPerformEnemyTurn.apply(this, arguments);
+  };
+
   const originalFinishTurn = proto._finishTurn;
   proto._finishTurn = function () {
-    this.state.allies.forEach((unit) => applyTurnEndEffects(this, unit));
-
     const expiring = this.state.allies.flatMap((unit) =>
       activeStatuses(unit, TYPES.maxHpUp)
         .filter((status) => Number(status.remaining) === 1)
@@ -254,7 +260,7 @@
   REGISTRY.register(SERVANT_ID, {
     name: 'エインガナ',
     hooks: {},
-    notes: '最大HP増加、HP割合防御、攻撃時最大HP増加、最大HP増加量によるターン終了時効果を管理。致死ダメージ回避自体は共通処理を使用。'
+    notes: '最大HP増加、HP割合防御、攻撃時最大HP増加、最大HP増加量による味方ターン終了時効果を管理。致死ダメージ回避自体は共通処理を使用。'
   });
 
   const API = {
