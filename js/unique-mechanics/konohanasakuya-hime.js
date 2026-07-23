@@ -12,7 +12,6 @@
     require('../common-effects.js');
     require('../turn-field-effects.js');
     require('../command-use-locks.js');
-    require('../command-card-selection-effects.js');
   }
   if (!DATA || !ENGINE || !ENGINE.BattleEngine || !REGISTRY) {
     throw new Error('Konohanasakuya-hime mechanics require data, engine and unique registry.');
@@ -91,15 +90,10 @@
       const sunlight = typeof this.hasFieldTrait === 'function'
         ? this.hasFieldTrait('陽射し')
         : (this.state.fieldTraits || []).includes('陽射し');
-      const selfStatuses = targets
-        .filter((target) => target && target.frontline !== false)
-        .map((target) => this._addStatus(target, effect, 1, source && source.name));
+      const selfStatuses = targets.map((target) => this._addStatus(target, effect, 1, source && source.name));
       if (!sunlight) return { applied: selfStatuses.length > 0, statuses: selfStatuses, conditional: false };
 
-      // <控え含む>の記述がないため、派生効果も前衛だけを対象にする。
-      const allies = this.state.allies.filter((unit) =>
-        unit !== source && unit.frontline !== false && unit.alive && Number(unit.hp || 0) > 0
-      );
+      const allies = this._effectTargets({ target: 'allOtherAllies' }, source, null);
       allies.forEach((ally) => {
         this._addStatus(ally, {
           type: TYPES.afterSkillCooldown,
@@ -123,13 +117,6 @@
         statusIcon: 'Stunstatus.webp',
         label: STATUS_NAMES[TYPES.bind]
       }, 1, source && source.name));
-      return { applied: statuses.length > 0, statuses };
-    }
-
-    if (effect.type === TYPES.commandCardSeal) {
-      const frontline = this.getAliveAllies().filter((unit) => unit.frontline !== false);
-      if (frontline.length <= 1) return { applied: false, reason: 'singleFrontline' };
-      const statuses = targets.map((target) => this._addStatus(target, effect, 1, source && source.name));
       return { applied: statuses.length > 0, statuses };
     }
 
@@ -195,8 +182,11 @@
   REGISTRY.register(SERVANT_ID, {
     name: '木花之佐久夜毘売',
     hooks: {},
-    notes: '陽射しフィールド、桜花爛漫、使用スキルCT短縮、拘束、コマンドカード選出不能を管理。対象に<控え含む>の記述がない効果は前衛のみ。'
+    notes: '陽射しフィールド、桜花爛漫、使用スキルCT短縮、拘束を管理。コマンドカード選出不能と対象範囲は共通処理を使用。'
   });
+
+  // Node.jsでは固有ラッパーを登録した後に共通処理を最終ラッパーとして登録する。
+  if (typeof require !== 'undefined') require('../command-card-selection-effects.js');
 
   const API = { servantId: SERVANT_ID, statusTypes: { ...TYPES } };
   global.FGO_SIM_KONOHANASAKUYA_HIME = API;
