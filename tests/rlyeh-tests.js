@@ -12,6 +12,10 @@ require('../js/np-card-trigger-removal-effects.js');
 require('../js/order-change-position.js');
 const RLYEH = require('../js/unique-mechanics/rlyeh.js');
 require('../js/unique-mechanics/runtime.js');
+require('../js/command-use-locks.js');
+require('../js/command-card-selection-effects.js');
+const INCAPACITATION = require('../js/incapacitated-command-selection.js');
+const COMMAND_LOCKS = require('../js/incapacitated-skill-np-locks.js');
 
 function enemy(overrides = {}) {
   return { enabled: true, name: '対象', classId: 'archer', attribute: 'sky', traits: ['ヒト科'], hp: 1000000, attack: 1, dtdr: 1, deathRate: 100, chargeMax: 9, critRate: 0, ...overrides };
@@ -24,6 +28,18 @@ function engine(party, target = enemy()) {
 function test(name, callback) {
   try { callback(); console.log(`✓ ${name}`); }
   catch (error) { console.error(`✗ ${name}`); throw error; }
+}
+
+function forcedCard(actor, index, card = 'arts') {
+  return {
+    id: `rlyeh-sleep-card-${index}`,
+    actorId: actor.id,
+    card,
+    cardIndex: index,
+    randomWeightBonus: 0,
+    assignedStars: 0,
+    critChance: 0
+  };
 }
 
 test('ルルイエの基本データと指定アイコンを登録', () => {
@@ -81,16 +97,59 @@ test('古の支配者は選択色ブーストを付与しターン終了時に�
   assert.strictEqual(e.orderChange(target.id, 'ally-3').ok, false);
 });
 
-test('永久睡眠中はスキル・宝具・カードを選択できない', () => {
+test('ルルイエ永久睡眠中は通常カードのみ選択可能でスキル・宝具は使用不可', () => {
   const e = engine([{ servantId: 'rlyeh', skillLevel: 10 }, { servantId: 'fenrir', skillLevel: 10, startingNp: 100 }]);
   const [rlyeh, target] = e.getState().allies;
   e.useSkill(rlyeh.id, 2, target.id, 'arts');
   e._finishTurn();
   target.cooldowns = [0,0,0];
+
+  const sleep = target.statuses.find((status) => status.type === RLYEH.statusTypes.permanentSleep);
+  assert.ok(sleep);
+  assert.strictEqual(INCAPACITATION.isIncapacitated(target), true);
+  assert.strictEqual(INCAPACITATION.statusNames[RLYEH.statusTypes.permanentSleep], '永久睡眠');
+
+  const skillAvailability = e.getSkillAvailability(target.id, 0);
+  assert.strictEqual(skillAvailability.available, false);
+  assert.strictEqual(skillAvailability.lockedByStatus, true);
+  assert.strictEqual(skillAvailability.label, '永久睡眠');
   assert.strictEqual(e.useSkill(target.id, 0, target.id).ok, false);
+
+  const npAvailability = e.getNpAvailability(target.id);
+  assert.strictEqual(npAvailability.available, false);
+  assert.strictEqual(npAvailability.lockedByStatus, true);
+  assert.strictEqual(npAvailability.label, '永久睡眠');
   assert.strictEqual(e.toggleNp(target.id), false);
-  const card = e.getState().hand.find((entry) => entry.actorId === target.id);
-  if (card) assert.strictEqual(e.toggleCard(card.id), false);
+
+  const card = forcedCard(target, 0, 'arts');
+  e.state.hand = [card];
+  e.state.selectedActions = [];
+  assert.strictEqual(e.toggleCard(card.id), true, '永久睡眠中でも通常カードは選択できる');
+  assert.strictEqual(e.state.selectedActions[0].cardId, card.id);
+  assert.strictEqual(e.toggleCard(card.id), true, '永久睡眠中でも通常カードを選択解除できる');
+});
+
+test('行動不能付与時は選択済み宝具を解除する', () => {
+  const e = engine([{ servantId: 'rlyeh' }, { servantId: 'fenrir', startingNp: 100 }]);
+  const target = e.getState().allies[1];
+  target.np = 100;
+  assert.strictEqual(e.toggleNp(target.id), true);
+  assert.strictEqual(e.state.selectedActions.some((action) => action.type === 'np' && action.actorId === target.id), true);
+
+  e._addStatus(target, {
+    type: RLYEH.statusTypes.permanentSleep,
+    duration: -1,
+    unremovable: true,
+    label: '永久睡眠'
+  }, 0, 'テスト');
+  assert.strictEqual(e.state.selectedActions.some((action) => action.type === 'np' && action.actorId === target.id), false);
+});
+
+test('行動不能時のスキル・宝具ロックAPIを公開する', () => {
+  assert.strictEqual(COMMAND_LOCKS.skillsLocked, true);
+  assert.strictEqual(COMMAND_LOCKS.noblePhantasmsLocked, true);
+  assert.strictEqual(COMMAND_LOCKS.normalCommandCardsSelectable, true);
+  assert.strictEqual(DATA.version, '1.13.3');
 });
 
 test('味方が即死した際に自身以外の味方へNP50を配布', () => {
