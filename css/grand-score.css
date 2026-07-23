@@ -1,0 +1,46 @@
+.grand-score-setup-section {
+  border-color: rgba(239, 199, 92, .38);
+  background: linear-gradient(135deg, rgba(75, 58, 19, .28), rgba(24, 28, 41, .78));
+}
+
+.grand-score-system-card {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(239, 199, 92, .28);
+  border-radius: 12px;
+  background: rgba(8, 11, 19, .42);
+}
+
+.grand-score-system-card p {
+  margin: 0;
+  color: rgba(235, 239, 248, .76);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.grand-score-main-toggle span,
+.grand-servant-toggle span {
+  font-weight: 800;
+}
+
+.grand-servant-toggle {
+  margin: 8px 0 2px;
+  padding: 8px 10px;
+  border: 1px solid rgba(239, 199, 92, .24);
+  border-radius: 9px;
+  background: rgba(239, 199, 92, .07);
+}
+
+.party-setup-card.grand-servant-selected {
+  border-color: rgba(255, 213, 88, .72);
+  box-shadow: 0 0 0 1px rgba(255, 213, 88, .15), 0 10px 28px rgba(0, 0, 0, .24);
+}
+
+.party-setup-card.grand-servant-selected .setup-card-title::after {
+  content: ' GRAND';
+  margin-left: 6px;
+  color: #f5d46d;
+  font-size: 10px;
+  letter-spacing: .08em;
+}
