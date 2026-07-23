@@ -41,6 +41,30 @@
       source: 'https://appmedia.jp/fategrandorder/103128'
     },
 
+    idealHolyKing: {
+      id: 'idealHolyKing',
+      name: '理想の王聖',
+      atk: 1000,
+      hp: 1600,
+      description: '味方全体＜控え含む＞の最大HPを1200アップ',
+      effects: [
+        { type: 'partyMaxHpAtBattleStart', target: 'partyIncludingReserve', value: 1200 }
+      ],
+      source: 'https://w.atwiki.jp/f_go/pages/809.html'
+    },
+
+    millenniumGoldenTree: {
+      id: 'millenniumGoldenTree',
+      name: '千年黄金樹',
+      atk: 0,
+      hp: 2250,
+      description: '自身に最大HP上昇効果を毎ターン付与（毎ターン+300・最大+3000）',
+      effects: [
+        { type: 'maxHpGrowthPerPlayerTurn', value: 300, maxValue: 3000 }
+      ],
+      source: 'https://w.atwiki.jp/f_go/pages/685.html'
+    },
+
     detectiveFoumes: {
       id: 'detectiveFoumes',
       name: '名探偵フォウムズ',
