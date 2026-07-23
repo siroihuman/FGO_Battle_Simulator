@@ -68,7 +68,7 @@
       aura: 'Statusup.webp',
       onNormalAttackApplyDebuff: 'Buffatk.webp',
       addTrait: 'Dragontrait.webp',
-      onAttackAddTrait: 'Buffatk.webp'
+      onAttackAddTrait: 'Dragontrait.webp'
     },
     servants: {},
     craftEssences: {},
