@@ -101,8 +101,8 @@
     ],
     np: {
       id: 'einganaVoidDesert',
-      name: 'エインガナ',
-      reading: '無の砂漠',
+      name: '無の砂漠',
+      reading: 'エインガナ',
       card: 'buster',
       rank: 'EX',
       category: '結界宝具',
