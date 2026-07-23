@@ -12,6 +12,7 @@
     require('../common-effects.js');
     require('../turn-field-effects.js');
     require('../command-use-locks.js');
+    require('../command-card-selection-effects.js');
   }
   if (!DATA || !ENGINE || !ENGINE.BattleEngine || !REGISTRY) {
     throw new Error('Konohanasakuya-hime mechanics require data, engine and unique registry.');
@@ -90,10 +91,15 @@
       const sunlight = typeof this.hasFieldTrait === 'function'
         ? this.hasFieldTrait('陽射し')
         : (this.state.fieldTraits || []).includes('陽射し');
-      const selfStatuses = targets.map((target) => this._addStatus(target, effect, 1, source && source.name));
+      const selfStatuses = targets
+        .filter((target) => target && target.frontline !== false)
+        .map((target) => this._addStatus(target, effect, 1, source && source.name));
       if (!sunlight) return { applied: selfStatuses.length > 0, statuses: selfStatuses, conditional: false };
 
-      const allies = this.state.allies.filter((unit) => unit !== source && unit.alive && Number(unit.hp || 0) > 0);
+      // <控え含む>の記述がないため、派生効果も前衛だけを対象にする。
+      const allies = this.state.allies.filter((unit) =>
+        unit !== source && unit.frontline !== false && unit.alive && Number(unit.hp || 0) > 0
+      );
       allies.forEach((ally) => {
         this._addStatus(ally, {
           type: TYPES.afterSkillCooldown,
@@ -144,16 +150,6 @@
     return result;
   };
 
-  const originalToggleCard = proto.toggleCard;
-  proto.toggleCard = function (cardId) {
-    const card = this.state.hand.find((entry) => entry.id === cardId);
-    const actor = card && this.getUnit(card.actorId);
-    if (actor && (actor.statuses || []).some((status) => status.type === TYPES.commandCardSeal && isActive(status))) {
-      return false;
-    }
-    return originalToggleCard.call(this, cardId);
-  };
-
   const originalFinishTurn = proto._finishTurn;
   proto._finishTurn = function () {
     this.state.allies.forEach((unit) => {
@@ -199,7 +195,7 @@
   REGISTRY.register(SERVANT_ID, {
     name: '木花之佐久夜毘売',
     hooks: {},
-    notes: '陽射しフィールド、桜花爛漫、使用スキルCT短縮、拘束、コマンドカード選出不能を管理。'
+    notes: '陽射しフィールド、桜花爛漫、使用スキルCT短縮、拘束、コマンドカード選出不能を管理。対象に<控え含む>の記述がない効果は前衛のみ。'
   });
 
   const API = { servantId: SERVANT_ID, statusTypes: { ...TYPES } };
