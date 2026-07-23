@@ -1,0 +1,36 @@
+name: Temporary frontline sleep diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run targeted tests
+        id: targeted
+        shell: bash
+        run: |
+          status=0
+          {
+            node tests/frontline-slot-promotion-tests.js
+            node tests/incapacitated-command-selection-tests.js
+            node tests/np-selection-order-tests.js
+          } > targeted-output.txt 2>&1 || status=$?
+          cat targeted-output.txt
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+      - name: Upload output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontline-sleep-output
+          path: targeted-output.txt
+      - name: Fail when targeted tests failed
+        if: always()
+        run: test "${{ steps.targeted.outputs.exit_code }}" = "0"
