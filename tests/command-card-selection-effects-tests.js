@@ -142,7 +142,7 @@ test('行動不能参加時はBrave ChainとExtra Attackを発生させない', 
 
   const result = engine.executeCommandChain();
   assert.strictEqual(result.ok, true);
-  assert.ok(!engine.getState().logs.some((entry) => entry.message.includes('Extra Attack')));
+  assert.ok(!engine.getState().logs.some((entry) => entry.kind === 'extra' || entry.type === 'extra'));
 });
 
 test('行動不能参加時は宝具ChainのOC上昇を無効化する', () => {
