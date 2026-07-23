@@ -248,9 +248,6 @@
     const actor = this.getUnit(allyId);
     const skill = actor && actor.data && actor.data.skills[skillIndex];
     if (!isRlyeh(actor) || !skill || skill.id !== 'greatOldOne') {
-      if (actor && (actor.statuses || []).some((status) => status.type === TYPES.permanentSleep && isActive(status))) {
-        return { ok: false, reason: '永久睡眠状態のためスキルを使用できません。' };
-      }
       return originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
     }
     if (this.state.phase !== 'command' || this.state.winner) return { ok: false, reason: '現在はスキルを使用できません。' };
@@ -269,19 +266,6 @@
   function isSleeping(unit) {
     return Boolean(unit && (unit.statuses || []).some((status) => status.type === TYPES.permanentSleep && isActive(status)));
   }
-
-  const originalToggleCard = proto.toggleCard;
-  proto.toggleCard = function (cardId) {
-    const card = this.state.hand.find((entry) => entry.id === cardId);
-    if (card && isSleeping(this.getUnit(card.actorId))) return false;
-    return originalToggleCard.call(this, cardId);
-  };
-
-  const originalToggleNp = proto.toggleNp;
-  proto.toggleNp = function (allyId) {
-    if (isSleeping(this.getUnit(allyId))) return false;
-    return originalToggleNp.call(this, allyId);
-  };
 
   const originalOrderChange = proto.orderChange;
   proto.orderChange = function (frontId, reserveId) {
@@ -334,7 +318,7 @@
   REGISTRY.register(SERVANT_ID, {
     name: 'ルルイエ',
     hooks: {},
-    notes: 'カード色選択、永久睡眠、即死時NP配布、即死成功時強化吸収を管理。クラス相性は共通システム側で処理する。'
+    notes: 'カード色選択、永久睡眠付与、即死時NP配布、即死成功時強化吸収を管理。行動不能時のカード・宝具・スキル制御は共通システム側で処理する。'
   });
 
   const API = { servantId: SERVANT_ID, statusTypes: { ...TYPES }, boostValues: BOOST_VALUES.slice(), cardValues: CARD_VALUES.slice() };
