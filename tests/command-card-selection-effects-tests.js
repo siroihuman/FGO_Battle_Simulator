@@ -131,7 +131,7 @@ test('コマンドカード選出不能と前衛対象APIを公開する', () =>
   assert.strictEqual(EFFECTS.effectIncludesReserve({ target: 'allAlliesIncludingReserve' }), true);
   assert.strictEqual(typeof EFFECTS.isIncapacitated, 'undefined');
   assert.strictEqual(typeof EFFECTS.incapacitatingStatus, 'undefined');
-  assert.strictEqual(DATA.version, '1.13.1');
+  assert.strictEqual(DATA.version, '1.13.2');
 });
 
 console.log('\nコマンドカード選出不能・前衛対象処理テストに合格しました。');
