@@ -15,6 +15,22 @@
     return Boolean(status && status.sourceType === 'craftEssence');
   }
 
+  function protectCraftEssenceStatuses(unit) {
+    if (!unit) return unit;
+    (unit.statuses || [])
+      .filter(isCraftEssenceStatus)
+      .forEach((status) => {
+        status.unremovable = true;
+      });
+    return unit;
+  }
+
+  const originalCreateAlly = BattleEngine.prototype._createAlly;
+
+  BattleEngine.prototype._createAlly = function (slot, index) {
+    return protectCraftEssenceStatuses(originalCreateAlly.call(this, slot, index));
+  };
+
   const originalApplyEffect = BattleEngine.prototype._applyEffect;
 
   BattleEngine.prototype._applyEffect = function (effect, source, selectedTargetId, context) {
@@ -33,6 +49,7 @@
         .forEach((status) => {
           protectedStatuses.push({ status, passive: status.passive });
           status.passive = true;
+          status.unremovable = true;
         });
     });
 
@@ -74,7 +91,8 @@
   const API = {
     BattleEngine,
     buffRemovalEffectTypes: Array.from(BUFF_REMOVAL_EFFECT_TYPES),
-    isCraftEssenceStatus
+    isCraftEssenceStatus,
+    protectCraftEssenceStatuses
   };
 
   global.FGO_SIM_CRAFT_ESSENCE_EFFECTS = API;
