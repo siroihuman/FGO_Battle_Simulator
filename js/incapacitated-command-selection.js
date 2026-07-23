@@ -24,6 +24,7 @@
     'charm',
     'sleep',
     'permanentSleep',
+    'rlyehPermanentSleep',
     'petrify',
     'petrification',
     'freeze',
@@ -39,6 +40,7 @@
     charm: '魅了',
     sleep: '睡眠',
     permanentSleep: '永久睡眠',
+    rlyehPermanentSleep: '永久睡眠',
     petrify: '石化',
     petrification: '石化',
     freeze: '凍結',
@@ -102,6 +104,36 @@
 
   proto.isIncapacitated = function (unitOrId) {
     return Boolean(this.getIncapacitatingStatus(unitOrId));
+  };
+
+  const originalGetSkillAvailability = proto.getSkillAvailability;
+  proto.getSkillAvailability = function (unitOrId, skillIndex) {
+    const availability = typeof originalGetSkillAvailability === 'function'
+      ? originalGetSkillAvailability.call(this, unitOrId, skillIndex)
+      : { available: true, reason: '', lockedByStatus: false };
+    if (availability && availability.lockedByStatus) return availability;
+
+    const status = incapacitatingStatus(unitFrom(this, unitOrId));
+    if (!status) return availability;
+    const label = statusName(status);
+    return {
+      available: false,
+      lockedByStatus: true,
+      kind: 'incapacitated',
+      status,
+      label,
+      reason: `${label}状態のためスキルを使用できません。`
+    };
+  };
+
+  const originalUseSkill = proto.useSkill;
+  proto.useSkill = function (allyId) {
+    const status = incapacitatingStatus(unitFrom(this, allyId));
+    if (status) {
+      const label = statusName(status);
+      return { ok: false, reason: `${label}状態のためスキルを使用できません。`, status };
+    }
+    return originalUseSkill.apply(this, arguments);
   };
 
   const originalInitialize = proto._initialize;
@@ -280,6 +312,7 @@
     isIncapacitated,
     selectionAllowedWhileIncapacitated: true,
     executionStillBlocked: true,
+    skillsLockedWhileIncapacitated: true,
     visualClass: 'command-incapacitated',
     directToggleCard,
     directToggleNp
