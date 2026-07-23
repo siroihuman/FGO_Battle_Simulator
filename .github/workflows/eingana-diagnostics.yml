@@ -1,0 +1,21 @@
+name: Eingana diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lethal damage evasion test
+        run: node tests/lethal-damage-evasion-effects-tests.js
+      - name: Eingana test
+        run: node tests/eingana-tests.js
+      - name: Servant mechanics registry test
+        run: node tests/servant-mechanics-tests.js
