@@ -1,0 +1,27 @@
+name: Eingana diagnostics
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run targeted tests
+        shell: bash
+        run: |
+          set +e
+          node tests/lethal-damage-evasion-effects-tests.js > diagnostic.txt 2>&1
+          a=$?
+          node tests/eingana-tests.js >> diagnostic.txt 2>&1
+          b=$?
+          node tests/servant-mechanics-tests.js >> diagnostic.txt 2>&1
+          c=$?
+          tail -200 diagnostic.txt
+          test "$a" = 0 -a "$b" = 0 -a "$c" = 0
