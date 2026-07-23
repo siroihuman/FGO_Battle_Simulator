@@ -10,5 +10,6 @@ require('./beast-031-status-icons.js');
 require('./quinqux-quinquefolia.js');
 require('./quinqux-quinquefolia-fixes.js');
 require('./konohanasakuya-hime.js');
+require('./eingana.js');
 
 module.exports = registry;
