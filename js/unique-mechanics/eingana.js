@@ -191,7 +191,7 @@
         if (!existing) {
           engine._addStatus(unit, {
             type: 'deathEvasion',
-            duration: 1,
+            duration: 2,
             uses: 1,
             statusIcon: 'DeathEvasion.webp'
           }, 1, status.source || '創造 EX');
@@ -205,7 +205,7 @@
       if (increase >= 90000) {
         engine._addStatus(unit, {
           type: 'npPowerUp',
-          duration: 1,
+          duration: 2,
           statusIcon: 'Nppowerup.webp'
         }, 100, status.source || '創造 EX');
         engine._log(`${unit.name}は最大HP増加量90000以上により宝具威力が超絶アップ。`, 'buff');
