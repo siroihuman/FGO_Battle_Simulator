@@ -13,7 +13,7 @@ function assert(condition, label) {
 assert(Array.isArray(UNIQUE.list()), 'Unique Mechanicsレジストリを取得できる');
 const uniqueIds = UNIQUE.list().map((entry) => entry.servantId).sort();
 assert(
-  JSON.stringify(uniqueIds) === JSON.stringify(['aliceLiddell', 'baphomet', 'beast031', 'konohanasakuyaHime', 'quinquxQuinquefolia', 'rlyeh']),
+  JSON.stringify(uniqueIds) === JSON.stringify(['aliceLiddell', 'baphomet', 'beast031', 'eingana', 'konohanasakuyaHime', 'quinquxQuinquefolia', 'rlyeh']),
   '固有例外処理を持つサーヴァントだけがレジストリへ登録される'
 );
 assert(Object.keys(DATA.servants).length > 0, 'サーヴァントデータは通常どおり登録される');
