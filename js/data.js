@@ -2,7 +2,7 @@
   'use strict';
 
   const DATA = {
-    version: '1.13.3',
+    version: '1.14.0',
     title: 'FGO バトルシミュレーター',
     classNames: {
       saber: 'セイバー', archer: 'アーチャー', lancer: 'ランサー',
@@ -73,7 +73,8 @@
     servants: {},
     craftEssences: {},
     mysticCodes: {},
-    classScore: null
+    classScore: null,
+    grandScore: null
   };
 
   global.FGO_SIM_DATA = DATA;
