@@ -30,8 +30,7 @@
     hpTurnBranches: 'einganaHpTurnBranches',
     hpPerTurn: 'einganaHpPerTurn',
     maxHpOnAttack: 'einganaMaxHpOnAttack',
-    creationThresholds: 'einganaCreationThresholds',
-    afterSkillCooldown: 'einganaAfterSkillCooldown'
+    creationThresholds: 'einganaCreationThresholds'
   };
   const STATUS_NAMES = {
     [TYPES.maxHpUp]: '最大HPアップ',
@@ -39,10 +38,12 @@
     [TYPES.hpTurnBranches]: 'HP割合に応じたターン終了時効果',
     [TYPES.hpPerTurn]: '毎ターンHP回復',
     [TYPES.maxHpOnAttack]: '攻撃時・最大HPアップ',
-    [TYPES.creationThresholds]: '創造・最大HP増加量条件効果',
-    [TYPES.afterSkillCooldown]: 'スキル使用後・使用スキルCT短縮'
+    [TYPES.creationThresholds]: '創造・最大HP増加量条件効果'
   };
-  const META_KEYS = ['highNp', 'lowHeal', 'maxHpIncrease', 'uniqueKey'];
+  const META_KEYS = [
+    'highNp', 'lowHeal', 'maxHpIncrease', 'uniqueKey',
+    'thresholdNp', 'thresholdNpPower'
+  ];
 
   function isActive(status) {
     return Boolean(status) &&
@@ -102,7 +103,9 @@
     const value = levelValue(effect, context, source);
 
     if (effect.type === TYPES.maxHpUp) {
-      const statuses = targets.map((target) => applyMaxHpUp(this, target, effect, value, source && source.name)).filter(Boolean);
+      const statuses = targets.map((target) =>
+        applyMaxHpUp(this, target, effect, value, source && source.name)
+      ).filter(Boolean);
       return { applied: statuses.length > 0, statuses };
     }
 
@@ -114,7 +117,9 @@
   proto._statusTotal = function (unit, type, filter) {
     const base = originalStatusTotal.call(this, unit, type, filter);
     if (type !== 'defenseUp' || !unit || !unit.alive) return base;
-    const hpRatio = unit.maxHp > 0 ? Math.max(0, Math.min(1, Number(unit.hp || 0) / Number(unit.maxHp || 1))) : 0;
+    const hpRatio = unit.maxHp > 0
+      ? Math.max(0, Math.min(1, Number(unit.hp || 0) / Number(unit.maxHp || 1)))
+      : 0;
     const scaling = activeStatuses(unit, TYPES.highHpDefense)
       .reduce((sum, status) => sum + Number(status.value || 0) * hpRatio, 0);
     return base + scaling;
@@ -131,6 +136,52 @@
     ).filter(Boolean);
   }
 
+  function targetDeathRate(target) {
+    if (!target) return 0;
+    if (target.deathRate != null) return Number(target.deathRate || 0);
+    if (target.data && target.data.deathRate != null) return Number(target.data.deathRate || 0);
+    return 0;
+  }
+
+  function applyNpInstantDeath(engine, actor, target, action) {
+    if (!actor || actor.data.id !== SERVANT_ID || !target || !target.alive || !action || action.type !== 'np') return false;
+    const baseChance = Number(actor.data.np.instantDeathChance || 0) / 100;
+    if (baseChance <= 0) return false;
+
+    const immune = activeStatuses(target, 'instantDeathImmune')[0] || null;
+    if (immune) {
+      if (immune.uses != null) engine._consumeStatus(target, immune);
+      engine._log(`${target.name}の即死無効がエインガナの即死効果を無効化。`, 'resist');
+      return false;
+    }
+
+    const deathResist = engine._statusTotal(target, 'deathResist') / 100;
+    const successRate = baseChance * (targetDeathRate(target) / 100) * Math.max(0, 1 - deathResist);
+    if (engine.rng() >= successRate) {
+      engine._log(`${target.name}への即死効果は失敗（成功率${(successRate * 100).toFixed(2)}%）。`);
+      return false;
+    }
+
+    target.hp = 0;
+    const gutsStatus = activeStatuses(target, 'guts')[0] || null;
+    if (gutsStatus) {
+      target.hp = Math.max(1, Number(gutsStatus.value || 1));
+      engine._consumeStatus(target, gutsStatus);
+      engine._log(`${target.name}は即死後、ガッツで復活。`, 'heal');
+    } else {
+      target.alive = false;
+      engine._log(`${target.name}に即死効果が成功。`, 'death');
+    }
+    return true;
+  }
+
+  const originalResolveAttackOnTarget = proto._resolveAttackOnTarget;
+  proto._resolveAttackOnTarget = function (actor, target, action, chainContext) {
+    const result = originalResolveAttackOnTarget.call(this, actor, target, action, chainContext);
+    applyNpInstantDeath(this, actor, target, action);
+    return result;
+  };
+
   const originalExecuteCard = proto._executeCard;
   proto._executeCard = function (action, chainContext) {
     const actor = action && this.getUnit(action.actorId);
@@ -144,19 +195,6 @@
     const actor = action && this.getUnit(action.actorId);
     const result = originalExecuteNp.call(this, action, chainContext, precedingNps);
     triggerAttackMaxHp(this, actor);
-    return result;
-  };
-
-  const originalUseSkill = proto.useSkill;
-  proto.useSkill = function (allyId, skillIndex, selectedTargetId, selectedCardType) {
-    const actor = this.getUnit(allyId);
-    const result = originalUseSkill.call(this, allyId, skillIndex, selectedTargetId, selectedCardType);
-    if (!result || !result.ok || !actor) return result;
-    const trigger = activeStatuses(actor, TYPES.afterSkillCooldown)[0];
-    if (trigger && Number(actor.cooldowns[skillIndex] || 0) > 0) {
-      actor.cooldowns[skillIndex] = Math.max(0, Number(actor.cooldowns[skillIndex] || 0) - 1);
-      this._log(`${actor.name}のスキル使用後効果により、使用したスキルのチャージを1進めた。`, 'skill');
-    }
     return result;
   };
 
@@ -177,7 +215,7 @@
         engine._addNp(unit, Number(status.highNp || 20), true);
         engine._log(`${unit.name}はHP75%以上のためNPが${Number(status.highNp || 20)}%増加。`, 'np');
       } else {
-        const heal = Math.max(0, Number(status.lowHeal || 5000));
+        const heal = Math.max(0, Number(status.lowHeal || 2000));
         const before = unit.hp;
         unit.hp = Math.min(unit.maxHp, unit.hp + heal);
         engine._log(`${unit.name}はHP74%以下のためHPが${unit.hp - before}回復。`, 'heal');
@@ -199,24 +237,24 @@
         }
       }
       if (increase >= 60000) {
-        engine._addNp(unit, 20, true);
-        engine._log(`${unit.name}は最大HP増加量60000以上によりNPが20%増加。`, 'np');
+        const amount = Number(status.thresholdNp || 50);
+        engine._addNp(unit, amount, true);
+        engine._log(`${unit.name}は最大HP増加量60000以上によりNPが${amount}%増加。`, 'np');
       }
       if (increase >= 90000) {
+        const power = Number(status.thresholdNpPower || 200);
         engine._addStatus(unit, {
           type: 'npPowerUp',
           duration: 1,
           statusIcon: 'Nppowerup.webp'
-        }, 100, status.source || '創造 EX');
-        engine._log(`${unit.name}は最大HP増加量90000以上により宝具威力が超絶アップ。`, 'buff');
+        }, power, status.source || '創造 EX');
+        engine._log(`${unit.name}は最大HP増加量90000以上により宝具威力が${power}%アップ。`, 'buff');
       }
     });
   }
 
   const originalPerformEnemyTurn = proto._performEnemyTurn;
   proto._performEnemyTurn = function () {
-    // 味方側の「ターン終了時」は味方攻撃終了後、敵攻撃開始前に処理する。
-    // ここで付与した1T状態は敵ターン中のみ有効で、敵ターン終了時に消滅する。
     this.state.allies.forEach((unit) => applyTurnEndEffects(this, unit));
     return originalPerformEnemyTurn.apply(this, arguments);
   };
@@ -255,19 +293,19 @@
   DATA.statusIcons[TYPES.hpPerTurn] = 'Hpregen.webp';
   DATA.statusIcons[TYPES.maxHpOnAttack] = 'Buffatk.webp';
   DATA.statusIcons[TYPES.creationThresholds] = 'DelayedBuff.webp';
-  DATA.statusIcons[TYPES.afterSkillCooldown] = 'Skillcooldown.webp';
 
   REGISTRY.register(SERVANT_ID, {
     name: 'エインガナ',
     hooks: {},
-    notes: '最大HP増加、HP割合防御、攻撃時最大HP増加、最大HP増加量による味方ターン終了時効果を管理。致死ダメージ回避自体は共通処理を使用。'
+    notes: '最大HP増加、HP割合防御、攻撃時最大HP増加、宝具即死、最大HP増加量による味方ターン終了時効果を管理。致死ダメージ回避自体は共通処理を使用。'
   });
 
   const API = {
     servantId: SERVANT_ID,
     statusTypes: { ...TYPES },
     maxHpIncreaseTotal,
-    applyMaxHpUp
+    applyMaxHpUp,
+    applyNpInstantDeath
   };
 
   global.FGO_SIM_EINGANA = API;
